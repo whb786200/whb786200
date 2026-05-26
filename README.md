@@ -1,6 +1,9 @@
-<h1 align="center">Hi 👋, I'm WHB</h1>
-<h3 align="center">土木工程 × AI 自动化</h3>
-<h4 align="center">从工程实践中生长出的全栈开发能力</h4>
+# Hi 👋, I'm WHB
+
+<p align="center">
+  <b>土木工程 × AI 自动化</b><br/>
+  <i>从工程实践中生长出的全栈开发能力</i>
+</p>
 
 <p align="center">
   <a href="https://github.com/whb786200"><img src="https://img.shields.io/badge/土木工程-Civil%20Engineering-8B0000?style=flat-square" alt="Civil Engineering"/></a>
@@ -24,10 +27,12 @@
 
 ### 🛠️ 技术栈
 
-```语言:    TypeScript · Python · JavaScript · PowerShell
+```
+语言:    TypeScript · Python · JavaScript · PowerShell
 框架:    Node.js · Express · FastAPI
 工具:    WorkBuddy · Claude Code · CAD(query) · OCP
-领域:    土木工程 · AI Agent · 内容管线 · 知识管理```
+领域:    土木工程 · AI Agent · 内容管线 · 知识管理
+```
 
 ---
 
