@@ -369,7 +369,46 @@ flowchart LR
 | M-04 | 内容日历 | 90天选题池和发布节奏 |
 | M-05 | 工程进度营销素材包 | 每周从工程侧提炼可公开素材 |
 
-## 12. 结论
+## 12. 落地产物获取位置
+
+本策划书及配套清单已发布到 GitHub 大仓，后续更新以仓库 `main` 分支为准。
+
+| 类型 | 位置 |
+|------|------|
+| GitHub 大仓 | `https://github.com/whb786200/whb786200` |
+| 策划书目录 | `https://github.com/whb786200/whb786200/tree/main/digitalization-plan` |
+| 在线阅读 | `https://github.com/whb786200/whb786200/blob/main/digitalization-plan/README.md` |
+| 营销工具清单 | `https://github.com/whb786200/whb786200/blob/main/digitalization-plan/marketing-toolkit.md` |
+| 案例证据索引 | `https://github.com/whb786200/whb786200/blob/main/digitalization-plan/source-evidence.md` |
+
+如需拉取到本地使用，执行：
+
+```bash
+git clone https://github.com/whb786200/whb786200.git
+cd whb786200/digitalization-plan
+```
+
+如不使用 Git，也可下载 ZIP：
+
+```text
+https://github.com/whb786200/whb786200/archive/refs/heads/main.zip
+```
+
+当前本机落地位置：
+
+| 产物 | 本地路径 |
+|------|----------|
+| Git 工作副本 | `D:\Codex\projects\数字化\whb786200-git` |
+| 策划书 Markdown | `D:\Codex\projects\数字化\whb786200-git\digitalization-plan\README.md` |
+| Word 文档 | `D:\Users\19586\Desktop\项目数字化策划书.docx` |
+
+建议使用方式：
+
+1. 对外阅读和协作，以 GitHub 的 `digitalization-plan` 目录为准。
+2. 内部汇报和编辑，使用桌面 Word 文档。
+3. 后续更新先修改 Markdown，再重新导出 Word，避免多版本散落。
+
+## 13. 结论
 
 这个项目的数字化不应只停留在“工程资料自动化”，也不应只停留在“营销短视频提效”。
 
