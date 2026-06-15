@@ -1,0 +1,43 @@
+[submodule "digital-marketing-open-source-toolkit/tools/mautic"]
+	path = digital-marketing-open-source-toolkit/tools/mautic
+	url = https://github.com/mautic/mautic.git
+[submodule "digital-marketing-open-source-toolkit/tools/listmonk"]
+	path = digital-marketing-open-source-toolkit/tools/listmonk
+	url = https://github.com/knadh/listmonk.git
+[submodule "digital-marketing-open-source-toolkit/tools/sendportal"]
+	path = digital-marketing-open-source-toolkit/tools/sendportal
+	url = https://github.com/mettle/sendportal.git
+[submodule "digital-marketing-open-source-toolkit/tools/twenty"]
+	path = digital-marketing-open-source-toolkit/tools/twenty
+	url = https://github.com/twentyhq/twenty.git
+[submodule "digital-marketing-open-source-toolkit/tools/suitecrm"]
+	path = digital-marketing-open-source-toolkit/tools/suitecrm
+	url = https://github.com/SuiteCRM/SuiteCRM.git
+[submodule "digital-marketing-open-source-toolkit/tools/chatwoot"]
+	path = digital-marketing-open-source-toolkit/tools/chatwoot
+	url = https://github.com/chatwoot/chatwoot.git
+[submodule "digital-marketing-open-source-toolkit/tools/matomo"]
+	path = digital-marketing-open-source-toolkit/tools/matomo
+	url = https://github.com/matomo-org/matomo.git
+[submodule "digital-marketing-open-source-toolkit/tools/plausible"]
+	path = digital-marketing-open-source-toolkit/tools/plausible
+	url = https://github.com/plausible/analytics.git
+[submodule "digital-marketing-open-source-toolkit/tools/umami"]
+	path = digital-marketing-open-source-toolkit/tools/umami
+	url = https://github.com/umami-software/umami.git
+[submodule "digital-marketing-open-source-toolkit/tools/growthbook"]
+	path = digital-marketing-open-source-toolkit/tools/growthbook
+	url = https://github.com/growthbook/growthbook.git
+[submodule "digital-marketing-open-source-toolkit/tools/formbricks"]
+	path = digital-marketing-open-source-toolkit/tools/formbricks
+	url = https://github.com/formbricks/formbricks.git
+[submodule "digital-marketing-open-source-toolkit/tools/shlink"]
+	path = digital-marketing-open-source-toolkit/tools/shlink
+	url = https://github.com/shlinkio/shlink.git
+[submodule "digital-marketing-open-source-toolkit/tools/cal-diy"]
+	path = digital-marketing-open-source-toolkit/tools/cal-diy
+	url = https://github.com/calcom/cal.diy.git
+[submodule "digital-marketing-open-source-toolkit/tools/huginn"]
+	path = digital-marketing-open-source-toolkit/tools/huginn
+	url = https://github.com/huginn/huginn.git
+

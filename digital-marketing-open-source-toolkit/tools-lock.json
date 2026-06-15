@@ -1,0 +1,73 @@
+[
+  {
+    "slug": "mautic",
+    "repo": "https://github.com/mautic/mautic.git",
+    "commit": "df5305189e411cf4dd921dfd66eb23afdf22bc1a"
+  },
+  {
+    "slug": "listmonk",
+    "repo": "https://github.com/knadh/listmonk.git",
+    "commit": "03fd8ce46848de0bc94e22093473dff7c8bc17bd"
+  },
+  {
+    "slug": "sendportal",
+    "repo": "https://github.com/mettle/sendportal.git",
+    "commit": "6652906992cd7b7e5d4bb2b1f64dba6a8b953293"
+  },
+  {
+    "slug": "twenty",
+    "repo": "https://github.com/twentyhq/twenty.git",
+    "commit": "e70776f705eafc116b1bb625216705436cefc6f4"
+  },
+  {
+    "slug": "suitecrm",
+    "repo": "https://github.com/SuiteCRM/SuiteCRM.git",
+    "commit": "66129800d3d171ed6558b810081350a25c8460f7"
+  },
+  {
+    "slug": "chatwoot",
+    "repo": "https://github.com/chatwoot/chatwoot.git",
+    "commit": "e5c140158e1b94daca9297f248e536df7e7c70ff"
+  },
+  {
+    "slug": "matomo",
+    "repo": "https://github.com/matomo-org/matomo.git",
+    "commit": "056f05049e15d41fa1b1ef4015aa899229cf4a52"
+  },
+  {
+    "slug": "plausible",
+    "repo": "https://github.com/plausible/analytics.git",
+    "commit": "2ec71fdd3c535ed46ea552073b05116ad0b0b074"
+  },
+  {
+    "slug": "umami",
+    "repo": "https://github.com/umami-software/umami.git",
+    "commit": "c0ea3aefbee7a3429ee2f824b06dc4a9dbe0b7e1"
+  },
+  {
+    "slug": "growthbook",
+    "repo": "https://github.com/growthbook/growthbook.git",
+    "commit": "73039b1b4adf3912921af5f87c50da790c9be965"
+  },
+  {
+    "slug": "formbricks",
+    "repo": "https://github.com/formbricks/formbricks.git",
+    "commit": "9291f255c1004560c7dd5b57ce8200f0a8c1cdf7"
+  },
+  {
+    "slug": "shlink",
+    "repo": "https://github.com/shlinkio/shlink.git",
+    "commit": "6e2a6f4ada249f33032b7b9d48eaa2949813d555"
+  },
+  {
+    "slug": "cal-diy",
+    "repo": "https://github.com/calcom/cal.diy.git",
+    "commit": "dcd0da831f013be8b2a5767457ea6d187b352ccc"
+  },
+  {
+    "slug": "huginn",
+    "repo": "https://github.com/huginn/huginn.git",
+    "commit": "b7ad1667a33d9bd376e0fa406e1bf149e0034164"
+  }
+]
+

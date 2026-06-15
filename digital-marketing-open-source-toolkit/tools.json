@@ -1,0 +1,129 @@
+[
+  {
+    "name": "Mautic",
+    "slug": "mautic",
+    "category": "marketing_automation",
+    "repo": "https://github.com/mautic/mautic.git",
+    "homepage": "https://www.mautic.org/",
+    "license": "GPL-3.0",
+    "use_case": "线索培育、邮件活动、营销自动化"
+  },
+  {
+    "name": "listmonk",
+    "slug": "listmonk",
+    "category": "email_marketing",
+    "repo": "https://github.com/knadh/listmonk.git",
+    "homepage": "https://listmonk.app/",
+    "license": "AGPL-3.0",
+    "use_case": "自托管 newsletter、邮件列表、群发管理"
+  },
+  {
+    "name": "SendPortal",
+    "slug": "sendportal",
+    "category": "email_marketing",
+    "repo": "https://github.com/mettle/sendportal.git",
+    "homepage": "https://sendportal.io/",
+    "license": "MIT",
+    "use_case": "自托管邮件营销和 newsletter"
+  },
+  {
+    "name": "Twenty",
+    "slug": "twenty",
+    "category": "crm",
+    "repo": "https://github.com/twentyhq/twenty.git",
+    "homepage": "https://twenty.com/",
+    "license": "AGPL-3.0",
+    "use_case": "现代 CRM、客户和销售流程管理"
+  },
+  {
+    "name": "SuiteCRM",
+    "slug": "suitecrm",
+    "category": "crm",
+    "repo": "https://github.com/SuiteCRM/SuiteCRM.git",
+    "homepage": "https://suitecrm.com/",
+    "license": "AGPL-3.0",
+    "use_case": "传统企业级 CRM"
+  },
+  {
+    "name": "Chatwoot",
+    "slug": "chatwoot",
+    "category": "customer_engagement",
+    "repo": "https://github.com/chatwoot/chatwoot.git",
+    "homepage": "https://www.chatwoot.com/",
+    "license": "MIT",
+    "use_case": "在线客服、邮件支持、全渠道会话"
+  },
+  {
+    "name": "Matomo",
+    "slug": "matomo",
+    "category": "web_analytics",
+    "repo": "https://github.com/matomo-org/matomo.git",
+    "homepage": "https://matomo.org/",
+    "license": "GPL-3.0",
+    "use_case": "自托管网站分析"
+  },
+  {
+    "name": "Plausible Analytics",
+    "slug": "plausible",
+    "category": "web_analytics",
+    "repo": "https://github.com/plausible/analytics.git",
+    "homepage": "https://plausible.io/",
+    "license": "AGPL-3.0",
+    "use_case": "隐私友好的轻量网站分析"
+  },
+  {
+    "name": "Umami",
+    "slug": "umami",
+    "category": "web_analytics",
+    "repo": "https://github.com/umami-software/umami.git",
+    "homepage": "https://umami.is/",
+    "license": "MIT",
+    "use_case": "隐私友好的网站分析"
+  },
+  {
+    "name": "GrowthBook",
+    "slug": "growthbook",
+    "category": "experimentation",
+    "repo": "https://github.com/growthbook/growthbook.git",
+    "homepage": "https://www.growthbook.io/",
+    "license": "MIT/Open Core",
+    "use_case": "Feature Flag、A/B 测试、实验分析"
+  },
+  {
+    "name": "Formbricks",
+    "slug": "formbricks",
+    "category": "forms_surveys",
+    "repo": "https://github.com/formbricks/formbricks.git",
+    "homepage": "https://formbricks.com/",
+    "license": "AGPL-3.0/Open Core",
+    "use_case": "问卷、用户反馈、NPS 和调研"
+  },
+  {
+    "name": "Shlink",
+    "slug": "shlink",
+    "category": "link_tracking",
+    "repo": "https://github.com/shlinkio/shlink.git",
+    "homepage": "https://shlink.io/",
+    "license": "MIT",
+    "use_case": "自托管短链接和访问统计"
+  },
+  {
+    "name": "Cal DIY",
+    "slug": "cal-diy",
+    "category": "appointment_conversion",
+    "repo": "https://github.com/calcom/cal.diy.git",
+    "homepage": "https://cal.com/",
+    "license": "MIT",
+    "use_case": "预约排期、线索转预约"
+  },
+  {
+    "name": "Huginn",
+    "slug": "huginn",
+    "category": "workflow_automation",
+    "repo": "https://github.com/huginn/huginn.git",
+    "homepage": "https://github.com/huginn/huginn",
+    "license": "MIT",
+    "use_case": "监控、触发器、自动化代理"
+  }
+]
+

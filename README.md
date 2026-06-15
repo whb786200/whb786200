@@ -46,6 +46,7 @@
 | [engineering-think-tank](https://github.com/whb786200/engineering-think-tank) | 工程人智库公众号自动化 | Python |
 | [ai-content-harvest](https://github.com/whb786200/ai-content-harvest) | AI内容收割机 | - |
 | [digitalization-plan](digitalization-plan/) | 项目数字化策划书：工程管理数字化 + 营销数字化 | Markdown |
+| [digital-marketing-open-source-toolkit](digital-marketing-open-source-toolkit/) | 数字化营销开源工具集：营销自动化、CRM、分析、表单、实验、短链等 | Git Submodules |
 | [iceberg-os](https://github.com/whb786200/iceberg-os) | 地缘政治分析框架 | - |
 | [bamboo-stock](https://github.com/whb786200/bamboo-stock) | 竹子·冰山·政事堂股市分析 | Python |
 
