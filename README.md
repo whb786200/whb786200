@@ -22,6 +22,7 @@
 
 - **工程管理自动化** — 项目管理资料生成、OCR识别、文件智能归档
 - **AI 内容管线** — 公众号全自动发布、小红书/即刻多平台分发、播客音频制作
+- **地产数字化策划** — 工程管理数字化、营销数字化、项目数据与内容获客联动
 - **知识工程** — 冰山系统(Iceberg OS)地缘政治分析框架、IMA知识库技能、元技能自举法
 - **全栈工程** — TypeScript/Python 后端、WorkBuddy Skill 生态、CAD/STEP 工程建模
 
@@ -44,6 +45,7 @@
 | [64-Skills](https://github.com/whb786200/64-Skills) | WorkBuddy Skills 集合 | JavaScript |
 | [engineering-think-tank](https://github.com/whb786200/engineering-think-tank) | 工程人智库公众号自动化 | Python |
 | [ai-content-harvest](https://github.com/whb786200/ai-content-harvest) | AI内容收割机 | - |
+| [digitalization-plan](digitalization-plan/) | 项目数字化策划书：工程管理数字化 + 营销数字化 | Markdown |
 | [iceberg-os](https://github.com/whb786200/iceberg-os) | 地缘政治分析框架 | - |
 | [bamboo-stock](https://github.com/whb786200/bamboo-stock) | 竹子·冰山·政事堂股市分析 | Python |
 
