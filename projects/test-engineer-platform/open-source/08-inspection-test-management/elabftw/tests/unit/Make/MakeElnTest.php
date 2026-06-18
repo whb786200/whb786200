@@ -1,0 +1,57 @@
+<?php
+
+declare(strict_types=1);
+/**
+ * @author Nicolas CARPi <nico-git@deltablot.email>
+ * @copyright 2022 Nicolas CARPi
+ * @see https://www.elabftw.net Official website
+ * @license AGPL-3.0
+ * @package elabftw
+ */
+
+namespace Elabftw\Make;
+
+use Elabftw\Models\Instance2Rors;
+use Elabftw\Models\Teams2Rors;
+use Elabftw\Models\Users2Rors;
+use Elabftw\Models\Users\Users;
+use Elabftw\Traits\TestsUtilsTrait;
+use Psr\Log\LoggerInterface;
+use ZipStream\ZipStream;
+
+class MakeElnTest extends \PHPUnit\Framework\TestCase
+{
+    use TestsUtilsTrait;
+
+    private MakeEln $Make;
+
+    protected function setUp(): void
+    {
+        $targets = array(
+            $this->getFreshExperiment(),
+            $this->getFreshExperiment(),
+            $this->getFreshItem(),
+        );
+        $Users = new Users(1, 1);
+        $Zip = $this->createMock(ZipStream::class);
+        $this->Make = new MakeEln(
+            $this->createMock(LoggerInterface::class),
+            $Zip,
+            $Users,
+            $targets,
+            new Instance2Rors(),
+            new Teams2Rors($Users->getTeam(), false),
+            new Users2Rors($Users->getUserid(), false),
+        );
+    }
+
+    public function testGetFileName(): void
+    {
+        $this->assertStringEndsWith('-export.eln', $this->Make->getFileName());
+    }
+
+    public function testGetElnExp(): void
+    {
+        $this->Make->getStreamZip();
+    }
+}

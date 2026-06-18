@@ -1,0 +1,234 @@
+import org.apache.commons.lang3.SystemUtils
+import org.labkey.gradle.plugin.XsdDoc
+import org.labkey.gradle.task.CreateModule
+import org.labkey.gradle.task.CreateJsDocs
+import org.labkey.gradle.util.BuildUtils
+import org.labkey.gradle.util.GroupNames
+import org.labkey.gradle.util.PomFileHelper
+
+plugins {
+    id 'maven-publish'
+    id 'org.labkey.build.jsdoc'
+    id 'org.labkey.build.xsddoc'
+    id 'org.labkey.build.npmRun'
+    id 'org.labkey.build.tomcat'
+    id 'org.labkey.build.serverDeploy'
+    id 'org.labkey.build.database'
+}
+
+configurations {
+    recompilingJsp {
+        canBeConsumed = true
+        canBeResolved = true
+    }
+}
+configurations.recompilingJsp.setDescription("Dependencies used by RecompileJspClassLoader")
+BuildUtils.addTomcatBuildDependencies(project, 'recompilingJsp')
+
+dependencies
+        {
+            remotePipelineJars "jakarta.servlet:jakarta.servlet-api:${servletApiVersion}"
+        }
+
+dependencies
+{
+   xsdDoc "xml-apis:xml-apis:${xmlApisVersion}"
+   xsdDoc "xerces:xercesImpl:${xercesImplVersion}"
+   xsdDoc "docflex:docflex-xml-re:${docflexXmlReVersion}"
+}
+
+configurations
+        {
+            binaries
+        }
+configurations.binaries.setDescription("Proteomics binaries")
+
+if (project.hasProperty('includeProteomicsBinaries'))
+{
+    dependencies
+    {
+        if (SystemUtils.IS_OS_LINUX) {
+            binaries "org.labkey.tools.linux:proteomicsBinaries:${linuxProteomicsBinariesVersion}@zip"
+        }
+        else if (SystemUtils.IS_OS_MAC) {
+            binaries "org.labkey.tools.osx:proteomicsBinaries:${osxProteomicsBinariesVersion}@zip"
+        }
+        else if (SystemUtils.IS_OS_WINDOWS) {
+            binaries "org.labkey.tools.windows:proteomicsBinaries:${windowsProteomicsBinariesVersion}@zip"
+        }
+    }
+}
+
+// This a subset of the XSDs because dependencies get pulled in.
+
+String schemasProjectPath = BuildUtils.getSchemasProjectPath(project.gradle)
+List<File> xsdFiles = []
+
+if (project.findProject(schemasProjectPath))
+{
+    xsdFiles += [
+        project.project(schemasProjectPath).file("schemas/clientLibrary.xsd"),
+        project.project(schemasProjectPath).file("schemas/apiTest.xsd"),
+        project.project(schemasProjectPath).file("schemas/cohorts.xsd"),
+        project.project(schemasProjectPath).file("schemas/datasets.xsd"),
+        project.project(schemasProjectPath).file("schemas/domainTemplate.xsd"),
+        project.project(schemasProjectPath).file("schemas/externalSchema.xsd"),
+        project.project(schemasProjectPath).file("schemas/folder.xsd"),
+        project.project(schemasProjectPath).file("schemas/folderType.xsd"),
+        project.project(schemasProjectPath).file("schemas/module.xsd"),
+        project.project(schemasProjectPath).file("schemas/pages.xsd"),
+        project.project(schemasProjectPath).file("schemas/participantGroups.xsd"),
+        project.project(schemasProjectPath).file("schemas/pipelineOptions.xsd"),
+        project.project(schemasProjectPath).file("schemas/pipelineProtocolProps.xsd"),
+        project.project(schemasProjectPath).file("schemas/qcStates.xsd"),
+        project.project(schemasProjectPath).file("schemas/query.xsd"),
+        project.project(schemasProjectPath).file("schemas/report.xsd"),
+        project.project(schemasProjectPath).file("schemas/reportProps.xsd"),
+        project.project(schemasProjectPath).file("schemas/studyViews.xsd"),
+        project.project(schemasProjectPath).file("schemas/view.xsd"),
+        project.project(schemasProjectPath).file("schemas/viewCategory.xsd"),
+        project.project(schemasProjectPath).file("schemas/visitMap.xsd")
+    ]
+}
+
+if (project.findProject( BuildUtils.getPlatformModuleProjectPath(project.gradle, "assay")) != null)
+    xsdFiles += project.project( BuildUtils.getPlatformModuleProjectPath(project.gradle, "assay")).file("schemas/assayProvider.xsd")
+if (project.findProject( BuildUtils.getPlatformModuleProjectPath(project.gradle, "list")) != null)
+    xsdFiles += project.project( BuildUtils.getPlatformModuleProjectPath(project.gradle, "list")).file("schemas/lists.xsd")
+if (project.findProject(":server:modules:premiumModules:dataintegration")  != null)
+    xsdFiles += project.project(":server:modules:premiumModules:dataintegration").file("schemas/etl.xsd")
+if (project.findProject(":server:modules:premiumModules:redcap") != null)
+    xsdFiles += project.project(":server:modules:premiumModules:redcap").file("schemas/redcapExport.xsd")
+if (project.findProject(":server:modules:premiumModules:cdisc_ODM") != null)
+    xsdFiles += project.project(":server:modules:premiumModules:cdisc_ODM").file("schemas/cdiscExport.xsd")
+
+project.xsdDoc.xsdFiles=xsdFiles
+
+project.jsDoc.paths = [
+    "modules/platform/api/webapp/clientapi",
+    "modules/platform/api/webapp/clientapi/core",
+    "modules/platform/api/webapp/clientapi/dom",
+    "modules/platform/api/webapp/clientapi/ext3",
+    "modules/platform/api/webapp/clientapi/ext4",
+    "modules/platform/api/webapp/clientapi/ext4/data",
+    "modules/platform/core/webapp/labkey.js",
+    "modules/platform/core/webapp/vis/src",
+    "modules/platform/visualization/resources/web/vis/genericChart/genericChartHelper.js",
+    "modules/platform/visualization/resources/web/vis/timeChart/timeChartHelper.js"
+]
+
+project.publishing {
+    publications {
+        xsdDocs(MavenPublication) {
+            groupId = 'org.labkey.doc'
+            artifactId = 'xml-schemas'
+            version = project.version
+            artifact project.tasks.xsdDocZip
+            pom {
+                name = "LabKey Server XML Schema documentation"
+                description = "Documentation for the classes generated from LabKey Server XSD files."
+                developers PomFileHelper.getLabKeyTeamDevelopers()
+                licenses PomFileHelper.getApacheLicense()
+                organization PomFileHelper.getLabKeyOrganization()
+                scm PomFileHelper.getLabKeyGitScm()
+            }
+        }
+
+        jsDocs(MavenPublication) {
+            groupId = 'org.labkey.doc'
+            artifactId = 'javascript'
+            artifact project.tasks.jsDocZip
+            version = project.version
+            pom {
+                name = "LabKey Server Javascript Client API documentation"
+                description = "Documentation for Javascript classes, methods, and objects available for use with LabKey server"
+                developers PomFileHelper.getLabKeyTeamDevelopers()
+                licenses PomFileHelper.getApacheLicense()
+                organization PomFileHelper.getLabKeyOrganization()
+                scm PomFileHelper.getLabKeyGitScm()
+            }
+        }
+
+        if (BuildUtils.shouldPublish(project))
+        {
+            project.artifactoryPublish {
+                publications('jsDocs', 'xsdDocs')
+            }
+            project.subprojects {
+                artifactoryPublish.skip = true
+            }
+        }
+    }
+}
+
+
+project.tasks.register("cleanDocs", Delete) {
+    Delete task ->
+        task.group = GroupNames.DOCUMENTATION
+        task.description = "Remove directories created for xsd and js doc tasks"
+        task.configure({ DeleteSpec delete ->
+            delete.delete(XsdDoc.getXsdDocDirectory(project))
+            delete.delete(CreateJsDocs.getJsDocDirectory(project))
+        })
+}
+
+tasks.register('createModule', CreateModule) {
+    task ->
+        task.group = GroupNames.MODULE
+        task.description = "Creates a new module. Use moduleName property to specify the name of the module to be created. " +
+            "Use moduleDestination to specify the full path to destination" +
+            "Use createFiles to control which subdirectories are created.  Include some subset of api, test, and/or schema " +
+            "in a comma delimited list to create those subdirectories in the new module. If none are required, still " +
+            "include -PcreateFiles with no value to avoid being prompted."
+        task.notCompatibleWithConfigurationCache("Class needs to declare more input and output properties.")
+}
+
+project.tasks.register("reportVersionToTeamCity", DefaultTask) {
+    DefaultTask task ->
+        task.group = GroupNames.PUBLISHING
+        task.description = "Report version number (${labkeyVersion}) to TeamCity"
+        task.doLast({
+            // https://www.jetbrains.com/help/teamcity/2018.1/build-script-interaction-with-teamcity.html#adding-or-changing-a-build-parameter
+            println "##teamcity[setParameter name='labkey.version' value='${labkeyVersion}']"
+        })
+}
+
+if (project.hasProperty("teamcity"))
+{
+    project.tasks.named('stageApp').configure { dependsOn(project.tasks.named('reportVersionToTeamCity')) }
+}
+else
+{
+    var cleanJspRecompileSetup = project.tasks.register("cleanJspRecompileSetup", Delete) {
+        Delete task ->
+            task.group = GroupNames.BUILD
+            task.delete project.rootProject.layout.buildDirectory.dir("jspRecompiling").get()
+            task.description = "Remove build/jspRecompiling directory"
+    }
+
+    var jspRecompileSetup = project.tasks.register("jspRecompileSetup", Copy) {
+        CopySpec task ->
+            task.group = GroupNames.BUILD
+            task.description = "Copy dependencies required for JSP dynamic compiling"
+            task.into project.rootProject.layout.buildDirectory.dir("jspRecompiling")
+            task.from project.configurations.recompilingJsp
+            task.dependsOn(cleanJspRecompileSetup)
+            if (project.hasProperty('apacheTomcatVersion'))
+                task.inputs.property 'apacheTomcatVersion', project.property('apacheTomcatVersion')
+            else
+                task.outputs.cacheIf { false } // Just don't cache if we can't be sure of the Jasper version
+    }
+
+    project.tasks.named('deployApp').configure {
+        dependsOn(jspRecompileSetup)
+    }
+}
+
+// We add this configuration here so we have a single location to link to for the npm and node executables.
+// Each project that requires node will have its own downloaded version of node and npm, but for the symlinkNode
+// task we need a single location, and one that works even when not building from source (Issue 35207)
+project.node {
+    workDir = project.file("${project.rootProject.projectDir}/.node")
+    npmWorkDir = project.file("${project.rootProject.projectDir}/.node")
+}
+project.tasks.named('deployApp').configure { dependsOn(project.tasks.npmSetup) }

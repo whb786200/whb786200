@@ -1,0 +1,600 @@
+import org.apache.commons.lang3.SystemUtils
+import org.labkey.gradle.task.PurgeNpmAlphaVersions
+import org.labkey.gradle.task.PurgeNpmVersions
+import org.labkey.gradle.task.ShowDiscrepancies
+import org.labkey.gradle.util.BuildUtils
+import org.labkey.gradle.util.GroupNames
+
+buildscript {
+    dependencies {
+        // Not necessary but makes IntelliJ able to resolve class imports from our plugins
+        classpath "org.labkey.build:gradlePlugins:${gradlePluginsVersion}"
+    }
+}
+
+plugins {
+    id "com.jfrog.artifactory" version "${artifactoryPluginVersion}" apply false
+    id "com.github.node-gradle.node" version "${gradleNodePluginVersion}" apply false
+    id "org.owasp.dependencycheck" version "${owaspDependencyCheckPluginVersion}" apply false
+    id "com.github.ben-manes.versions" version "0.54.0"
+    id "org.labkey.build.multiGit"
+}
+
+allprojects {
+    if (project.hasProperty('enableOwaspDependencyCheck'))
+    {
+        apply plugin: 'org.owasp.dependencycheck'
+        dependencyCheck {
+            outputDirectory = project.rootProject.layout.buildDirectory.file("reports/dependencyCheck/${project.path.replaceAll(':', '_').substring(1)}").get().asFile
+            suppressionFile = "${project.rootProject.rootDir}/dependencyCheckSuppression.xml"
+            analyzers {
+                assemblyEnabled = false // Sets whether the .NET Assembly Analyzer should be used.
+                nodeEnabled = false // Sets whether the Node.js Analyzer should be used.
+                nodeAudit {
+                    enabled = false
+                }
+                retirejs {
+                    enabled = false
+                }
+            }
+            if (project.hasProperty('ossIndexUsername') && project.hasProperty('ossIndexPassword'))
+            {
+                analyzers.ossIndex.username = project.property('ossIndexUsername')
+                analyzers.ossIndex.password = project.property('ossIndexPassword')
+                analyzers.ossIndex.url = "https://api.guide.sonatype.com"
+            }
+            else
+            {
+                analyzers.ossIndex.enabled = false
+            }
+            formats = ['HTML', 'JUNIT']
+            skipConfigurations = ['dedupe', 'developmentOnly']
+            skipProjects = [':server:testAutomation']
+
+            nvd {
+                datafeedUrl = 'https://dependency-check.github.io/DependencyCheck_Builder/nvd_cache/nvdcve-{0}.json.gz'
+            }
+        }
+    }
+    if (BuildUtils.shouldPublish(project) || BuildUtils.shouldPublishDistribution(project))
+    {
+        apply plugin: 'com.jfrog.artifactory'
+    }
+    project.tasks.withType(JavaCompile).configureEach {
+        JavaCompile compile ->
+            compile.options.incremental = true  // Gradle 3.4
+            compile.options.encoding = 'UTF-8'
+            compile.options.compilerArgs << '-parameters'  // Preserve method parameter names for Spring AI reflection
+    }
+}
+
+// We need the tomcat home directory to run UI tests from within IntelliJ.
+String tomcatDirProp = System.getenv('CATALINA_HOME') != null ? System.getenv('CATALINA_HOME') : System.properties['tomcat.home']
+
+if (tomcatDirProp != null && !new File(tomcatDirProp).exists())
+    throw new GradleException("Tomcat home directory ${tomcatDirProp} does not exist.")
+
+allprojects {
+    // this configuration is needed only in server and testAutomation, but we leave it here (for now) to avoid duplication
+    configurations
+            {
+                driver
+            }
+    configurations.configureEach {
+        // exclude log4j 1.x, which may come in transitively, from all configurations to avoid its potential vulnerabilities
+        exclude group: "log4j", module:"log4j"
+        // exclude to ensure we don't have Log4J to SLFJ adapters or other unwanted logging libraries added to modules
+        exclude group: "org.springframework.boot", module:"spring-boot-starter-logging"
+    }
+    configurations.driver.setDescription("Dependencies used for Gradle SetUpProperties task")
+
+    dependencies
+            {
+                driver "org.postgresql:postgresql:${postgresqlDriverVersion}"
+                driver "com.microsoft.sqlserver:mssql-jdbc:${mssqlJdbcVersion}"
+            }
+
+    // We apply the base module here so we get the configurations (in particular external and modules)
+    // that can be used for the allDepInsight task below. I would really prefer not to do this here, but
+    // we'll need to find another solution for allDepInsight (perhaps enumerate projects?)
+    apply plugin: 'org.labkey.build.base'
+
+
+    tasks.withType(JavaCompile)
+            .configureEach {
+                sourceCompatibility = project.ext.sourceCompatibility
+                targetCompatibility = project.ext.targetCompatibility
+            }
+
+    repositories
+            {
+                mavenCentral()
+                // this if statement is necessary because the TeamCity artifactory plugin overrides
+                // the repositories but does not use these artifactory_ urls. For others who are
+                // developing or building, you do need to specify the three artifactory_ properties
+                // used below.
+                if (project.hasProperty("artifactory_contextUrl"))
+                {
+                    maven {
+                        url = "${artifactory_contextUrl}/ext-tools-local"
+                        content {
+                            includeGroup "org.labkey.tools.windows"
+                            includeGroup "org.labkey.tools.linux"
+                            includeGroup "org.labkey.tools.osx"
+                        }
+                    }
+                    maven {
+                        url = "${artifactory_contextUrl}/libs-release-no-proxy"
+
+                        if (project.hasProperty('artifactory_user') && project.hasProperty('artifactory_password'))
+                        {
+                            credentials {
+                                username = artifactory_user
+                                password = artifactory_password
+                            }
+                            authentication {
+                                basic(BasicAuthentication)
+                            }
+                        }
+                        mavenContent {
+                            releasesOnly()
+                        }
+                    }
+                    maven {
+                        url = "${artifactory_contextUrl}/libs-snapshot-no-proxy"
+
+                        if (project.hasProperty('artifactory_user') && project.hasProperty('artifactory_password'))
+                        {
+                            credentials {
+                                username = artifactory_user
+                                password = artifactory_password
+                            }
+                            authentication {
+                                basic(BasicAuthentication)
+                            }
+                        }
+                        mavenContent {
+                            snapshotsOnly()
+                        }
+                        content {
+                            includeGroup "org.labkey"
+                            includeGroup "org.labkey.api"
+                            includeGroup "org.labkey.module"
+                            includeGroup "org.labkey.build"
+                        }
+                    }
+
+// To build and test Tomcat versions that haven't been released yet, temporarily uncomment the block below and update
+// the four-digit number. The "VOTE" emails sent to the Tomcat dev email list include a staging repo URL. In addition
+// to updating the url to match, you'll need to update apacheTomcatVersion in gradle.properties.
+//                    maven {
+//                    	url "https://repository.apache.org/content/repositories/orgapachetomcat-1322/"
+//                    }
+
+// To test SNAPSHOT PostgreSQL JDBC drivers locally, temporarily uncomment the block below and update the
+// postgresqlDriverVersion property in gradle.properties to a SNAPSHOT version (e.g., 42.7.7-SNAPSHOT). Note that
+// the writeDependenciesList task does not support SNAPSHOT versions, so you'll need to build with something like:
+//
+//     ./gradlew deployApp -x writeDependenciesList
+//
+//                    maven {
+//                    	url "https://oss.sonatype.org/content/repositories/snapshots/"
+//                    }
+
+                    maven {
+                        // Mondrian dependencies are available via this repository. It's a direct dependency of the Query
+                        // module but is declared here as many modules depend on Query and therefore need it as well.
+                        url = "https://repo.orl.eng.hitachivantara.com/artifactory/pnt-mvn"
+                        content {
+                            includeGroup "pentaho"
+                            includeGroup "org.pentaho"
+                            includeGroup "org.olap4j"
+                            includeGroup "javacup"
+                        }
+                    }
+                }
+
+            }
+    configurations.configureEach
+            {
+                // Check for updates every build for SNAPSHOT dependencies
+                resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+            }
+    configurations.configureEach
+            {Configuration config ->
+                resolutionStrategy {
+                    //  spring-ai pulls a different version of antr-ST4 than the version pulled by query (via antlr)
+                    force "org.antlr:ST4:${antlrST4Version}"
+                    // also it pulls in a bunch of com.google.api dependencies which conflict with DiscvrLabKeyModules:SequenceAnalysis and wnprc-modules:WNPRC_EHR
+                    force "com.google.api:api-common:${googleApiVersion}"
+                    force "com.google.auth:google-auth-library-oauth2-http:${googleAuthVersion}"
+                    force "com.google.auth:google-auth-library-credentials:${googleAuthVersion}"
+
+                    // we force this version because we have compilation problems with version 1.9.2 of commons-beanutils, which is the version
+                    // that is brought in by Gradle's conflict resolution as a result of our chosen versions for commons-validator (1.5.0) and commons-digester (1.8.1)
+                    force "commons-beanutils:commons-beanutils:${commonsBeanutilsVersion}"
+                    // we get different versions of slf4j-log4j12 and slf4j-api from different transitive dependencies.
+                    force "org.slf4j:slf4j-log4j12:${slf4jLog4j12Version}"
+                    force "org.slf4j:slf4j-api:${slf4jLog4jApiVersion}"
+                    // force some newer versions than are brought in by mondrian (et al.)
+                    force "xerces:xercesImpl:${xercesImplVersion}"
+                    force "org.apache.logging.log4j:log4j-core:${log4j2Version}"
+                    force "org.apache.logging.log4j:log4j-api:${log4j2Version}"
+                    force "org.apache.logging.log4j:log4j-1.2-api:${log4j2Version}"
+                    // brought in by SequenceAnalysis, jbrowse
+                    force "org.apache.logging.log4j:log4j-slf4j-impl:${log4j2Version}"
+                    force "org.apache.commons:commons-vfs2:${commonsVfs2Version}"
+                    // force version for consistency with query, LDK, and pipeline
+                    force "commons-lang:commons-lang:${commonsLangVersion}"
+                    // force version for consistency with api, SequenceAnalysis
+                    force "org.apache.commons:commons-lang3:${commonsLang3Version}"
+                    force "commons-dbcp:commons-dbcp:${commonsDbcpVersion}"
+                    force "commons-io:commons-io:${commonsIoVersion}"
+                    force "commons-logging:commons-logging:${commonsLoggingVersion}"
+                    force "commons-pool:commons-pool:${commonsPoolVersion}"
+                    // force version for consistency with premium, OpenLdapSync
+                    force "org.apache.commons:commons-text:${commonsTextVersion}"
+                    // force version for consistency with search, premium, api
+                    force "org.apache.commons:commons-collections4:${commonsCollections4Version}"
+                    // force version for consistency with LDK, api
+                    force "commons-collections:commons-collections:${commonsCollectionsVersion}"
+                    // force version for ms2, fileTransfer, harvest, api, accounts, docker
+                    force "commons-codec:commons-codec:${commonsCodecVersion}"
+                    // force version consistency in TCRdb, SequenceAnalysis, API
+                    force "org.apache.commons:commons-math3:${commonsMath3Version}"
+                    force "org.reflections:reflections:${reflectionsVersion}"
+                    // force version for cloud, docker, fileTransfer, googledrive, tcrb, wnprc_ehr
+                    force "org.apache.httpcomponents:httpcore:${httpcoreVersion}"
+                    force "org.apache.httpcomponents.core5:httpcore5:${httpcore5Version}"
+                    // force version for cloud, docker, fileTransfer, googledrive, tcrb, wnprc_ehr
+                    force "org.apache.httpcomponents:httpclient:${httpclientVersion}"
+                    force "org.apache.httpcomponents.client5:httpclient5:${httpclient5Version}"
+                    // force version for postgresql jdbc, cloud, docker, fileTransfer, GoogleDrive, WNPRC_EHR
+                    force "org.checkerframework:checker-qual:${checkerQualVersion}"
+                    // force version for SequenceAnalysis, api, cloud
+                    force "com.google.guava:guava:${guavaVersion}"
+                    // force versions for SequenceAnalysis, TargetedMS
+                    force "com.google.protobuf:protobuf-java:${googleProtocolBufVersion}"
+                    force "com.google.protobuf:protobuf-java-util:${googleProtocolBufVersion}"
+                    // force version for Cloud, FileTransfer, SequenceAnalysis, etc.
+                    force "com.google.code.findbugs:jsr305:${jsr305Version}"
+                    // force version used by JAXB to match api
+                    force "org.eclipse.angus:angus-activation:${angusActivationVersion}"
+                    // force Jakarta Activation API version used by our Angus Activation implementation
+                    force "jakarta.activation:jakarta.activation-api:${jakartaActivationApiVersion}"
+                    // SequenceAnalysis brings in an older version via biojava-genome 7.1.1
+                    force "jakarta.xml.bind:jakarta.xml.bind-api:${jaxbApiVersion}"
+                    // force version for accounts, api, query
+                    force "javax.validation:validation-api:${validationApiVersion}"
+                    // force version for accounts, docker, api
+                    force "com.fasterxml.jackson.core:jackson-annotations:${jacksonAnnotationsVersion}"
+                    // genotyping brings in a much older version of this, so we force a newer version for compatibility
+                    force "org.apache.commons:commons-compress:${commonsCompressVersion}"
+                    // Force ant to be a newer version (transitive dependency of query > eigenbase-resgen > eigenbase-xom)
+                    force "org.apache.ant:ant:${antVersion}"
+                    // Transitive dependency of commons-compress -- Transitive dependency com.github.samtools:htsjdk which references an older version
+                    force "org.tukaani:xz:${tukaaniXZVersion}"
+                    // force version for api and LDK, but not for the xsdDoc configuration, which requires
+                    // an older version for the docflex library we use
+                    if (!config.name.equals('xsdDoc'))
+                        force "xml-apis:xml-apis:${xmlApisVersion}"
+                    // cloud and SequenceAnalysis bring this in as a transitive dependency. We resolve to the later version here to keep things consistent
+                    force "com.google.code.gson:gson:${gsonVersion}"
+
+                    // Google oauth2-http Library and api-common (via Picard, and perhaps others) bring in different versions; force the latest
+                    force "com.google.auto.value:auto-value-annotations:${googleAutoValueAnnotationsVersion}"
+                    force "com.google.http-client:google-http-client-apache-v2:${googleHttpClientVersion}"
+                    force "com.google.http-client:google-http-client-gson:${googleHttpClientVersion}"
+                    force "com.google.http-client:google-http-client-jackson2:${googleHttpClientVersion}"
+
+                    // FileTransfer depends on this directly; WNPRC_EHR and GoogleDrive bring a different version in transitively.
+                    force "com.google.oauth-client:google-oauth-client:${googleOauthClientVersion}"
+
+                    // Google HTTP Client Library and Guava bring in different versions; force the latest
+                    force "com.google.errorprone:error_prone_annotations:${googleErrorProneAnnotationsVersion}"
+                    // Force patched version of GPRC, dependency of a number of Google service APIs in WNPRC and fileTransfer
+                    force "io.grpc:grpc-context:${grpcVersion}"
+
+                    // TODO Remove these when the Picard version brought in by the SequenceAnalysis module is upgraded to use a version of grpc > 1.60.0
+                    force "io.grpc:grpc-alts:${grpcVersion}"
+                    force "io.grpc:grpc-auth:${grpcVersion}"
+                    force "io.grpc:grpc-core:${grpcVersion}"
+                    force "io.grpc:grpc-googleapis:${grpcVersion}"
+                    force "io.grpc:grpc-grpclb:${grpcVersion}"
+                    force "io.grpc:grpc-netty-shaded:${grpcVersion}"
+                    force "io.grpc:grpc-protobuf:${grpcVersion}"
+                    force "io.grpc:grpc-protobuf-lite:${grpcVersion}"
+                    force "io.grpc:grpc-rls:${grpcVersion}"
+                    force "io.grpc:grpc-services:${grpcVersion}"
+                    force "io.grpc:grpc-stub:${grpcVersion}"
+                    force "io.grpc:grpc-xds:${grpcVersion}"
+
+                    // JNA - transitive dependency via azure-identity and docker; force for consistency
+                    force "net.java.dev.jna:jna:${jnaVersion}"
+                    force "net.java.dev.jna:jna-platform:${jnaVersion}"
+
+                    // Reactor - transitive dependency via azure-core; force for version consistency across modules
+                    force "io.projectreactor:reactor-core:${reactorCoreVersion}"
+
+                    // Netty - transitive dependency via azure-core-http-netty; force for various CVEs
+                    force "io.netty:netty-buffer:${nettyVersion}"
+                    force "io.netty:netty-codec:${nettyVersion}"
+                    force "io.netty:netty-codec-dns:${nettyVersion}"
+                    force "io.netty:netty-codec-http:${nettyVersion}"
+                    force "io.netty:netty-codec-http2:${nettyVersion}"
+                    force "io.netty:netty-codec-socks:${nettyVersion}"
+                    force "io.netty:netty-common:${nettyVersion}"
+                    force "io.netty:netty-handler:${nettyVersion}"
+                    force "io.netty:netty-handler-proxy:${nettyVersion}"
+                    force "io.netty:netty-resolver:${nettyVersion}"
+                    force "io.netty:netty-resolver-dns:${nettyVersion}"
+                    force "io.netty:netty-resolver-dns-classes-macos:${nettyVersion}"
+                    force "io.netty:netty-resolver-dns-native-macos:${nettyVersion}"
+                    force "io.netty:netty-transport:${nettyVersion}"
+                    force "io.netty:netty-transport-classes-epoll:${nettyVersion}"
+                    force "io.netty:netty-transport-classes-kqueue:${nettyVersion}"
+                    force "io.netty:netty-transport-native-epoll:${nettyVersion}"
+                    force "io.netty:netty-transport-native-kqueue:${nettyVersion}"
+                    force "io.netty:netty-transport-native-unix-common:${nettyVersion}"
+
+                    // tcrdb, cloud, SequenceAnalysis, recipe mfa, pipeline, fileTransfer, docker mcc, DiscvrLabKeyModules:Studies and api have differnet versions of these libraries, so we need to force these versions
+                    force "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+                    force "com.fasterxml.jackson.core:jackson-databind:${jacksonDatabindVersion}"
+                    // The version of picard we depend on brings in an older version of htsjdk, but SequenceAnalysis depends on a later version
+                    force "com.github.samtools:htsjdk:${htsjdkVersion}"
+                    // This is a dependency for HTSJDK. Force version for CVE-2023-43642
+                    force "org.xerial.snappy:snappy-java:${snappyJavaVersion}"
+                    // Cloud module brings in earlier versions of this library, so we force the later one
+                    force "org.apache.tika:tika-core:${tikaVersion}"
+                    // OpenLDAPSync and premium have transitive dependency on a broken version of MINA
+                    force "org.apache.mina:mina-core:${apacheMinaVersion}"
+                    // force consistency in TCRdb, WNPRC
+                    force "org.javassist:javassist:${javassistVersion}"
+                    force "org.jetbrains:annotations:${annotationsVersion}"
+                    // force consistency in TCRdb, mfa (Duo SDK)
+                    force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${intellijKotlinVersion}"
+                    // force consistency between API and Java remote API
+                    force "org.json:json:${orgJsonVersion}"
+                    force "org.ow2.asm:asm:${asmVersion}"
+                    // force junit and hamcrest versions to be consistent with what comes from labkey-client-api.
+                    // The hamcrest dependencies come through transitively from jackson, junit, jmock
+                    force "org.hamcrest:hamcrest:${hamcrestVersion}"
+                    force "junit:junit:${junitVersion}"
+                    // SAML brings these in transitively
+                    force "org.codehaus.woodstox:stax2-api:${stax2ApiVersion}"
+                    force "com.fasterxml.woodstox:woodstox-core:${woodstoxCoreVersion}"
+                    // force consistency in docker, connectors, and saml
+                    force "org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}"
+                    force "org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}"
+
+                    // Force consistency for dependencies from pipeline and query
+                    force "org.dom4j:dom4j:${dom4jVersion}"
+
+                    // Force spring-ai components to bring in spring-* versions that match the rest of spring
+                    force "org.springframework:spring-context-support:${springVersion}"
+                    force "org.springframework:spring-messaging:${springVersion}"
+                    force "org.springframework:spring-webflux:${springVersion}"
+
+                    // Force consistency between pipeline's ActiveMQ and cloud's jClouds dependencies
+                    force "javax.annotation:javax.annotation-api:${javaxAnnotationVersion}"
+
+                    // Force snappy-java version for CVE-2023-43642. Remove once HTSJDK bumps its preferred version.
+                    force "org.xerial.snappy:snappy-java:${snappyJavaVersion}"
+
+                    // Consistency between cloud, pipeline
+                    force "javax.xml.bind:jaxb-api:${jaxbApiOldVersion}"
+
+                    // Force consistency for dependencies from cloud
+                    force "joda-time:joda-time:${jodaTimeVersion}"
+
+                    // Force latest hadoop-hdfs-client for CVE-2021-37404, CVE-2022-25168, CVE-2022-26612, CVE-2021-25642, CVE-2021-33036, CVE-2023-26031
+                    force "org.apache.hadoop:hadoop-hdfs-client:${hadoopHdfsClientVersion}"
+
+                    // Spring AI 2.0 brings in Jackson3. Force it to match embedded and mitigate CVEs.
+                    force "tools.jackson.core:jackson-core:${jackson3Version}"
+
+                    dependencySubstitution {
+                        // Because the client api artifact name is not the same as the directory structure, we use
+                        // Gradle's dependency substitution so the dependency will appear correctly in the pom files that
+                        // are generated. Because dependency substitution does not understand the use of classifiers, we cannot
+                        // use this mechanism in general (plus, it's very slow for our many-module build).
+                        if (project.findProject(BuildUtils.getRemoteApiProjectPath(gradle)) && BuildUtils.shouldBuildFromSource(project.project(BuildUtils.getRemoteApiProjectPath(gradle))))
+                            substitute module('org.labkey:labkey-client-api') using project(BuildUtils.getRemoteApiProjectPath(gradle))
+                        // mule and tika bring in different versions of bouncycastle package via transitive dependencies, but these versions
+                        // result in a StackOverflow when starting tomcat so we substitute new libraries for both versions that are brought in.
+                        substitute module('bouncycastle:bcprov-jdk14:138') using module("org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}")
+                        substitute module('bouncycastle:bcmail-jdk14:138') using module("org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}")
+                        substitute module('bouncycastle:bcprov-jdk15:1.45') using module("org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}")
+                        substitute module('bouncycastle:bcmail-jdk15:138') using module("org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}")
+
+                        // Docker and SAML are bringing in older -jdk15on versions (more recent versions have been renamed with -jdk18on suffix)
+                        substitute module('org.bouncycastle:bcprov-jdk15on:1.54') using module("org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}")
+                        substitute module('org.bouncycastle:bcprov-jdk15on:1.64') using module("org.bouncycastle:bcprov-jdk18on:${bouncycastleVersion}")
+                        substitute module('org.bouncycastle:bcpkix-jdk15on:1.64') using module("org.bouncycastle:bcpkix-jdk18on:${bouncycastleVersion}")
+
+                        // This JAR packages classes with the same names as commons-logging but forces them to use SLF4J instead
+                        // of the normal routing decisions, and can result in very verbose output to STDOUT
+                        substitute module('org.slf4j:jcl-over-slf4j') using module("commons-logging:commons-logging:${commonsLoggingVersion}")
+
+                        // jdk5 backport of guava has significant conflicts with guava 18+
+                        substitute module('com.google.guava:guava-jdk5') using module("com.google.guava:guava:${guavaVersion}")
+
+                        // This library was renamed
+                        substitute module('org.codehaus.woodstox:woodstox-core-asl') using module("com.fasterxml.woodstox:woodstox-core:${woodstoxCoreVersion}")
+
+                        // Avoid conflicts with declared dependencies on the newer versions from 'net.hydromatic'
+                        substitute module('eigenbase:eigenbase-properties') using module("net.hydromatic:eigenbase-properties:${eigenbasePropertiesVersion}")
+                        substitute module('eigenbase:eigenbase-resgen') using module("net.hydromatic:eigenbase-resgen:${eigenbaseResgenVersion}")
+                        substitute module('eigenbase:eigenbase-xom') using module("net.hydromatic:eigenbase-xom:${eigenbaseXomVersion}")
+
+                        substitute module('org.hamcrest:hamcrest-core') using module("org.hamcrest:hamcrest:${hamcrestVersion}")
+                        substitute module('org.hamcrest:hamcrest-library') using module("org.hamcrest:hamcrest:${hamcrestVersion}")
+                    }
+                }
+            }
+}
+
+
+if (BuildUtils.shouldPublish(project) || BuildUtils.shouldPublishDistribution(project))
+{
+    artifactory {
+        contextUrl = "${artifactory_contextUrl}"   //The base Artifactory URL if not overridden by the publisher/resolver
+        publish {
+            repository {
+                repoKey = BuildUtils.getRepositoryKey(project)
+                if (project.hasProperty('artifactory_user') && project.hasProperty('artifactory_password'))
+                {
+                    username = artifactory_user
+                    password = artifactory_password
+                }
+            }
+            defaults
+                    {
+                        publishBuildInfo = false
+                        publishPom = true
+                        publishIvy = false
+                    }
+        }
+    }
+
+    artifactoryPublish.skip = true
+}
+
+subprojects {
+    project.tasks.register("showRepos", DefaultTask) {
+        task ->
+            task.group = "Help"
+            task.description = "Show the list of repositories currently in use."
+            task.doLast({
+                repositories.each {
+                    println "repository: ${it.name} (${it.hasProperty("url") ? it.url : it.getDirs()})"
+                }
+            })
+    }
+    
+    project.tasks.register("allDepInsight", DependencyInsightReportTask) {
+            DependencyInsightReportTask t ->
+                t.group = "Help"
+                t.description = "Displays the insight into a specific dependency across all projects"
+                t.showingAllVariants=false
+    }
+    project.tasks.register("allDependencies", DependencyReportTask) {
+        task ->
+            task.group = GroupNames.HELP
+            task.description = "Displays the dependencies for all projects"
+    }
+}
+
+project.tasks.register("showDiscrepancies", ShowDiscrepancies) {
+    task ->
+        task.group = "Help"
+        task.description = "Report external dependencies that have more than one version referenced in the modules in this build"
+        task.notCompatibleWithConfigurationCache("Walks the project tree")
+}
+
+project.tasks.register('getModulesManifest', DefaultTask) {
+    task ->
+        task.group = GroupNames.DISTRIBUTION
+        task.description = "Creates a csv file with a list of the modules for each distribution. By default it will be " +
+                "placed in a directory called manifests in the root of this labkey installation. Specify another " +
+                "directory by using \"-PmanifestDir\". The default file name is distributionModules.csv; specify " +
+                "another name using \"-PmanifestFileName\"."
+        task.doLast({
+            String manifestDir = "${project.getRootProject().getProjectDir()}/manifests"
+            String manifestFileName = "distributionModules.csv"
+
+            if (project.hasProperty("manifestDir"))
+            {
+                manifestDir = project.manifestDir
+            }
+
+            if (project.hasProperty("manifestFileName"))
+            {
+                manifestFileName = project.manifestFileName
+            }
+
+            project.mkdir(manifestDir)
+            File manifestFile = project.file("${manifestDir}/${manifestFileName}")
+
+            StringBuilder manifestString = new StringBuilder("distribution,moduleName\n")
+            project.allprojects({ Project sp ->
+                if (sp.configurations.getNames().contains("distribution"))
+                {
+                    String distName
+                    if (sp.getName().startsWith("test_"))
+                    {
+                        // This is for the test_*prc case.
+                        distName = sp.getName()
+                    }
+                    else
+                    {
+                        distName = sp.tasks.distribution.hasProperty("subDirName") ?
+                                sp.tasks.distribution.subDirName :
+                                sp.getName()
+                    }
+                    sp.configurations.distribution
+                            .getAllDependencies()
+                            .withType(ProjectDependency)
+                            .each({ dep ->
+                                manifestString.append("${distName},${dep.name}\n")
+                            })
+                }
+            })
+            manifestFile.text = manifestString.toString()
+        })
+        task.notCompatibleWithConfigurationCache("Walks the project tree")
+}
+
+project.tasks.register('ijWorkspaceSetup', Copy) {
+    Copy copy ->
+        copy.group = "IntelliJ"
+        copy.description = "Copy the workspace template file. Used only once, for initial setup of the IntelliJ project."
+        copy.from(".idea/configTemplates/workspace.xml")
+        copy.into('.idea')
+}
+
+project.tasks.register("ijRunConfigurationsSetup", Copy) {
+    Copy copy ->
+        copy.group = "IntelliJ"
+        copy.description = "Copy run configurations from templates, substituting path separators for this OS"
+        copy.from(".idea/runConfigurations/templates")
+        copy.into(".idea/runConfigurations")
+        copy.filter({ String line ->
+            return line.replace("PATH_SEPARATOR", File.pathSeparator)
+        })
+        copy.mustRunAfter(project.tasks.ijCodeSetup)
+}
+
+project.tasks.register("ijCodeSetup", Copy) {
+    Copy copy ->
+        copy.group = "IntelliJ"
+        copy.description = "Copy template files from .idea/configTemplates to .idea directory (excluding the workspace.xml file)"
+        copy.from(".idea/configTemplates")
+        copy.into(".idea/")
+        copy.exclude("workspace.xml")
+}
+
+project.tasks.register('ijConfigure') {
+    DefaultTask task ->
+        task.group = "IntelliJ"
+        task.description = "Install IntelliJ template files as files for IntelliJ to use in .idea directory"
+        task.dependsOn(project.tasks.ijCodeSetup)
+        task.dependsOn(project.tasks.ijRunConfigurationsSetup)
+}
+
+if (BuildUtils.hasArtifactoryProperties(project as Project))
+{
+    project.tasks.register('purgeNpmAlphaVersions', PurgeNpmAlphaVersions) {
+        group = GroupNames.NPM_RUN
+        description = "Given an alpha version prefix for npm packages via the property -P${PurgeNpmAlphaVersions.ALPHA_PREFIX_PROPERTY}=yourPrefix, " +
+                "removes all packages with versions that match that prefix from Artifactory (e.g., @labkey/components-1.2.3-yourPrefix.0 and @labkey/premium-0.3.4-yourPrefix.1). " +
+                " Use -PdryRun to see what versions would be deleted without actually doing the deletion."
+    }
+
+    project.tasks.register('purgeNpmVersions', PurgeNpmVersions) {
+        group = GroupNames.NPM_RUN
+        description = "Given a package name via -P${PurgeNpmVersions.PACKAGE_NAME_PROP}=name (without the @labkey prefix) and a version list via -P${PurgeNpmVersions.VERSION_LIST_PROP}=fileName for npm package, " +
+                "removes the versions specified from Artifactory. " +
+                " Use -PdryRun to see what versions would be deleted without actually doing the deletion."
+    }
+}

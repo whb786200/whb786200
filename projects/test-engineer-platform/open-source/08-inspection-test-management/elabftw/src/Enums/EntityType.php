@@ -1,0 +1,156 @@
+<?php
+
+/**
+ * @author Nicolas CARPi <nico-git@deltablot.email>
+ * @copyright 2023 Nicolas CARPi
+ * @see https://www.elabftw.net Official website
+ * @license AGPL-3.0
+ * @package elabftw
+ */
+
+declare(strict_types=1);
+
+namespace Elabftw\Enums;
+
+use Elabftw\Exceptions\ImproperActionException;
+use Elabftw\Models\AbstractEntity;
+use Elabftw\Models\Experiments;
+use Elabftw\Models\Items;
+use Elabftw\Models\ItemsTypes;
+use Elabftw\Models\Templates;
+use Elabftw\Models\Users\Users;
+
+use function _;
+
+enum EntityType: string
+{
+    case Experiments = 'experiments';
+    case Templates = 'experiments_templates';
+    case Items = 'items';
+    case ItemsTypes = 'items_types';
+
+    public function toInstance(Users $users, ?int $entityId = null, ?bool $bypassReadPermission = null, ?bool $bypassWritePermission = null): AbstractEntity
+    {
+        return match ($this) {
+            self::Experiments => new Experiments($users, $entityId, $bypassReadPermission, $bypassWritePermission),
+            self::Items => new Items($users, $entityId, $bypassReadPermission, $bypassWritePermission),
+            self::Templates => new Templates($users, $entityId, $bypassReadPermission, $bypassWritePermission),
+            self::ItemsTypes => new ItemsTypes($users, $entityId, $bypassReadPermission, $bypassWritePermission),
+        };
+    }
+
+    public function toTemplateEntity(Users $users, ?int $entityId = null, ?bool $bypassReadPermission = null, ?bool $bypassWritePermission = null): AbstractEntity
+    {
+        return match ($this) {
+            self::Experiments,
+            self::Templates  => new Templates($users, $entityId, $bypassReadPermission, $bypassWritePermission),
+            self::Items,
+            self::ItemsTypes => new ItemsTypes($users, $entityId, $bypassReadPermission, $bypassWritePermission),
+        };
+    }
+
+    public function asTemplateTypeOrNull(): ?EntityType
+    {
+        return match ($this) {
+            self::Experiments => self::Templates,
+            self::Templates  => null,
+            self::Items => self::ItemsTypes,
+            self::ItemsTypes => null,
+        };
+    }
+
+    public function toTemplatePage(): string
+    {
+        return match ($this) {
+            self::Items, self::ItemsTypes => 'resources-templates.php',
+            default => 'templates.php',
+        };
+    }
+
+    public function toCategoryPage(): string
+    {
+        $prefix = match ($this) {
+            self::Items, self::ItemsTypes => 'resources',
+            default => 'experiments',
+        };
+        return $prefix . '-categories.php';
+    }
+
+    public function toStatusPage(): string
+    {
+        $prefix = match ($this) {
+            self::Items, self::ItemsTypes => 'resources',
+            default => 'experiments',
+        };
+        return $prefix . '-status.php';
+    }
+
+    public function toStatusTable(): string
+    {
+        return match ($this) {
+            self::Experiments, self::Templates => 'experiments_status',
+            self::Items, self::ItemsTypes => 'items_status',
+        };
+    }
+
+    public function toCategoryTable(): string
+    {
+        return match ($this) {
+            self::Experiments, self::Templates => 'experiments_categories',
+            self::Items, self::ItemsTypes => 'items_categories',
+        };
+    }
+
+    // for use in the "genre" attribute of .eln node
+    public function toGenre(): string
+    {
+        return match ($this) {
+            self::Experiments => 'experiment',
+            self::Items => 'resource',
+            self::Templates => 'experiment template',
+            self::ItemsTypes => 'resource template',
+        };
+    }
+
+    public function toPage(): string
+    {
+        return match ($this) {
+            self::Experiments => 'experiments.php',
+            self::Items => 'database.php',
+            self::Templates => 'templates.php',
+            self::ItemsTypes => 'resources-templates.php',
+        };
+    }
+
+    public function toInt(): int
+    {
+        return match ($this) {
+            self::Experiments => 1,
+            self::Items => 2,
+            self::Templates => 3,
+            self::ItemsTypes => 4,
+        };
+    }
+
+    public static function fromInt(?int $int): ?self
+    {
+        return match ($int) {
+            1 => self::Experiments,
+            2 => self::Items,
+            3 => self::Templates,
+            4 => self::ItemsTypes,
+            null => null,
+            default => throw new ImproperActionException('Invalid integer value for entityType'),
+        };
+    }
+
+    public function toHuman(): string
+    {
+        return match ($this) {
+            self::Experiments => _('Experiments'),
+            self::Items => _('Resources'),
+            self::Templates => _('Experiment templates'),
+            self::ItemsTypes => _('Resource templates'),
+        };
+    }
+}

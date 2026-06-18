@@ -1,0 +1,78 @@
+buildscript {
+    repositories {
+        mavenCentral()
+        gradlePluginPortal {
+            content {
+                excludeGroupByRegex "org\\.labkey.*"
+            }
+        }
+        maven {
+            url = "${artifactory_contextUrl}/plugins-release-no-proxy"
+            mavenContent {
+                releasesOnly()
+            }
+            content {
+                includeGroup "org.labkey.build"
+            }
+        }
+        if (gradlePluginsVersion.contains("SNAPSHOT"))
+        {
+            mavenLocal()
+            maven {
+                url = "${artifactory_contextUrl}/plugins-snapshot-local"
+                mavenContent {
+                    snapshotsOnly()
+                }
+                content {
+                    includeGroup "org.labkey.build"
+                }
+            }
+
+        }
+    }
+    dependencies {
+        classpath "org.labkey.build:gradlePlugins:${gradlePluginsVersion}"
+    }
+    configurations.configureEach {
+        // Check for updates every build for SNAPSHOT dependencies
+        resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+    }
+}
+import org.labkey.gradle.util.BuildUtils
+
+/*
+  This file specifies all of the modules to be included in the test distribution for the EHR TeamCity
+  configuration.
+ */
+
+List<String> ehrModulesDirs = [
+        "server/modules/johnsHopkinsEHRModules",
+        "server/modules/nircEHRModules",
+        "server/modules/onprcEHRModules",
+        "server/modules/ehrModules",
+        "server/modules/snprcEHRModules",
+        "server/modules/tnprcEHRModules",
+        "server/modules/wnprc-modules",
+        "server/modules/LabDevKitModules"
+]
+
+List<String> excludedModules = []
+if (hasProperty('excludedModules'))
+    excludedModules.addAll("${excludedModules}".split(","))
+
+
+BuildUtils.includeModules(this.settings, rootDir, [BuildUtils.PLATFORM_MODULES_DIR, BuildUtils.COMMON_ASSAYS_MODULES_DIR], excludedModules)
+BuildUtils.includeModules(this.settings, rootDir, ehrModulesDirs, excludedModules)
+
+if (new File(getRootDir(), BuildUtils.convertPathToRelativeDir(":server:modules:premiumModules")).exists())
+{
+    include ":server:modules:premiumModules:dataintegration"
+    include ":server:modules:premiumModules:premium"
+    include ":server:modules:premiumModules:ldap"
+}
+
+if (new File(getRootDir(), BuildUtils.convertPathToRelativeDir(BuildUtils.getTestProjectPath(gradle))).exists())
+{
+    // include the test distribution, which is used to create an artifact for TeamCity to pass around to the agents
+    include "${BuildUtils.getTestProjectPath(this.settings.gradle)}:distributions:teamcity"
+}

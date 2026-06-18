@@ -1,0 +1,11 @@
+.idea/
+*.pyc
+liquepy/__pycache__/
+dist/
+liquepy.egg-info/
+.pytest_cache/
+venv/
+
+docs/_build
+*/~$*
+tests/unit_test_data/~$CPT*

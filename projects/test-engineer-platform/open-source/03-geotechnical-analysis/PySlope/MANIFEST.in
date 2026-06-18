@@ -1,0 +1,5 @@
+include README.rst
+include LICENSE
+include requirements.txt
+graft pyslope
+recursive-exclude * *.py[co]

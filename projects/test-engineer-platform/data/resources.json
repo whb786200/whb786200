@@ -1,0 +1,1322 @@
+[
+  {
+    "id": "ab07f9847231",
+    "name": "12%灰剂量标准曲线.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/12%灰剂量标准曲线.xls",
+    "path": "resources/12%灰剂量标准曲线.xls",
+    "extension": "xls",
+    "category": "标准曲线",
+    "cost": 1,
+    "size": 55808
+  },
+  {
+    "id": "8f8739d4ab48",
+    "name": "19-37.5碎石电子版原版.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/19-37.5碎石电子版原版.xls",
+    "path": "resources/19-37.5碎石电子版原版.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 80384
+  },
+  {
+    "id": "fb9cec24da28",
+    "name": "2016~2017年都匀晴雨表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/2016~2017年都匀晴雨表.xls",
+    "path": "resources/2016~2017年都匀晴雨表.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 266752
+  },
+  {
+    "id": "0bf43f22fdc3",
+    "name": "6%灰土(轻型).xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/6%灰土(轻型).xls",
+    "path": "resources/6%灰土(轻型).xls",
+    "extension": "xls",
+    "category": "灰土灰剂量",
+    "cost": 1,
+    "size": 41472
+  },
+  {
+    "id": "2017145d1850",
+    "name": "6%灰土击实(重型).xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/6%灰土击实(重型).xls",
+    "path": "resources/6%灰土击实(重型).xls",
+    "extension": "xls",
+    "category": "土工击实",
+    "cost": 1,
+    "size": 27136
+  },
+  {
+    "id": "438dbd03d518",
+    "name": "6%石灰剂量标准曲线.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/6%石灰剂量标准曲线.xls",
+    "path": "resources/6%石灰剂量标准曲线.xls",
+    "extension": "xls",
+    "category": "标准曲线",
+    "cost": 1,
+    "size": 24064
+  },
+  {
+    "id": "23965b23824a",
+    "name": "8%灰剂量曲线.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/8%灰剂量曲线.xls",
+    "path": "resources/8%灰剂量曲线.xls",
+    "extension": "xls",
+    "category": "灰土灰剂量",
+    "cost": 1,
+    "size": 22016
+  },
+  {
+    "id": "bd00dc28d997",
+    "name": "9沥青混合料.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/9沥青混合料.xls",
+    "path": "resources/9沥青混合料.xls",
+    "extension": "xls",
+    "category": "沥青及混合料",
+    "cost": 1,
+    "size": 325632
+  },
+  {
+    "id": "c757c47bee1d",
+    "name": "标准混凝土配合比快速自动计算表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/标准混凝土配合比快速自动计算表.xls",
+    "path": "resources/标准混凝土配合比快速自动计算表.xls",
+    "extension": "xls",
+    "category": "配合比设计",
+    "cost": 2,
+    "size": 262656
+  },
+  {
+    "id": "fcdd55b5c0ab",
+    "name": "常用砼配合比计算.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/常用砼配合比计算.xls",
+    "path": "resources/常用砼配合比计算.xls",
+    "extension": "xls",
+    "category": "配合比设计",
+    "cost": 2,
+    "size": 229888
+  },
+  {
+    "id": "eaf789963716",
+    "name": "粗骨料（主要）试验记录计算表17个.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/粗骨料（主要）试验记录计算表17个.xls",
+    "path": "resources/粗骨料（主要）试验记录计算表17个.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 275456
+  },
+  {
+    "id": "d7e196cec30a",
+    "name": "粗骨料报告.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/粗骨料报告.xls",
+    "path": "resources/粗骨料报告.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 29184
+  },
+  {
+    "id": "28ae8b809b77",
+    "name": "粗集料计算.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/粗集料计算.xlsx",
+    "path": "resources/粗集料计算.xlsx",
+    "extension": "xlsx",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 39322
+  },
+  {
+    "id": "8e00be36e640",
+    "name": "粗集料筛分、级配设计曲线.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/粗集料筛分、级配设计曲线.xls",
+    "path": "resources/粗集料筛分、级配设计曲线.xls",
+    "extension": "xls",
+    "category": "集料筛分",
+    "cost": 1,
+    "size": 34816
+  },
+  {
+    "id": "0dfb1b7ea4aa",
+    "name": "粉煤灰常检项目原始记录自动计算.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/粉煤灰常检项目原始记录自动计算.xls",
+    "path": "resources/粉煤灰常检项目原始记录自动计算.xls",
+    "extension": "xls",
+    "category": "灰土灰剂量",
+    "cost": 2,
+    "size": 20480
+  },
+  {
+    "id": "248e1755bea9",
+    "name": "粉煤灰检验报告.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/粉煤灰检验报告.xls",
+    "path": "resources/粉煤灰检验报告.xls",
+    "extension": "xls",
+    "category": "灰土灰剂量",
+    "cost": 1,
+    "size": 46080
+  },
+  {
+    "id": "6f72c9bb8026",
+    "name": "附表5-仪器设备(标准物质)配置一览表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/附表5-仪器设备(标准物质)配置一览表.xls",
+    "path": "resources/附表5-仪器设备(标准物质)配置一览表.xls",
+    "extension": "xls",
+    "category": "仪器设备",
+    "cost": 0,
+    "size": 140288
+  },
+  {
+    "id": "e793a5cdf174",
+    "name": "钢筋计算公式.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/钢筋计算公式.xls",
+    "path": "resources/钢筋计算公式.xls",
+    "extension": "xls",
+    "category": "钢筋力学",
+    "cost": 2,
+    "size": 691712
+  },
+  {
+    "id": "039e718cf907",
+    "name": "钢筋力学性性能试验加荷速率一览表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/钢筋力学性性能试验加荷速率一览表.xls",
+    "path": "resources/钢筋力学性性能试验加荷速率一览表.xls",
+    "extension": "xls",
+    "category": "钢筋力学",
+    "cost": 0,
+    "size": 33280
+  },
+  {
+    "id": "f1e4cc13b711",
+    "name": "钢筋连接[1].xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/钢筋连接[1].xlsx",
+    "path": "resources/钢筋连接[1].xlsx",
+    "extension": "xlsx",
+    "category": "钢筋力学",
+    "cost": 1,
+    "size": 11101
+  },
+  {
+    "id": "55cb5cb07ec5",
+    "name": "钢筋强度自动计算.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/钢筋强度自动计算.xls",
+    "path": "resources/钢筋强度自动计算.xls",
+    "extension": "xls",
+    "category": "钢筋力学",
+    "cost": 2,
+    "size": 23040
+  },
+  {
+    "id": "fbe8d3bfa836",
+    "name": "高强螺栓.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/高强螺栓.xls",
+    "path": "resources/高强螺栓.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 31232
+  },
+  {
+    "id": "ca6e9eda119c",
+    "name": "高速公路试验检测项目及频率汇总表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/高速公路试验检测项目及频率汇总表.xls",
+    "path": "resources/高速公路试验检测项目及频率汇总表.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 71168
+  },
+  {
+    "id": "ae55a29460c0",
+    "name": "高铁试验检测项目及频率汇总表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/高铁试验检测项目及频率汇总表.xls",
+    "path": "resources/高铁试验检测项目及频率汇总表.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 115200
+  },
+  {
+    "id": "76c9c855abf1",
+    "name": "各种实验速率表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/各种实验速率表.xls",
+    "path": "resources/各种实验速率表.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 26112
+  },
+  {
+    "id": "07b9d778f873",
+    "name": "工地试验室平面布置图.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/工地试验室平面布置图.xls",
+    "path": "resources/工地试验室平面布置图.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 34304
+  },
+  {
+    "id": "b4178d025a66",
+    "name": "公路工程试验常规检测项目、检测标准、检测频率、取样方法.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/公路工程试验常规检测项目、检测标准、检测频率、取样方法.xls",
+    "path": "resources/公路工程试验常规检测项目、检测标准、检测频率、取样方法.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 94208
+  },
+  {
+    "id": "6364415bd4ef",
+    "name": "公路工地试验室规范清单.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/公路工地试验室规范清单.xls",
+    "path": "resources/公路工地试验室规范清单.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 0,
+    "size": 32768
+  },
+  {
+    "id": "a9d55ce7e745",
+    "name": "公路试验数据修约汇总.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/公路试验数据修约汇总.xls",
+    "path": "resources/公路试验数据修约汇总.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 20992
+  },
+  {
+    "id": "d267e47d4b5c",
+    "name": "骨料数据自动计算表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/骨料数据自动计算表.xls",
+    "path": "resources/骨料数据自动计算表.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 120320
+  },
+  {
+    "id": "d16a1a49273c",
+    "name": "含水率.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/含水率.xls",
+    "path": "resources/含水率.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 16384
+  },
+  {
+    "id": "a7c638778ab3",
+    "name": "核子密度仪试验记录表 (级配5月).xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/核子密度仪试验记录表 (级配5月).xls",
+    "path": "resources/核子密度仪试验记录表 (级配5月).xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 30208
+  },
+  {
+    "id": "e3746f5787c1",
+    "name": "荷兰轻型动力触探仪（清淤CU值）.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/荷兰轻型动力触探仪（清淤CU值）.xls",
+    "path": "resources/荷兰轻型动力触探仪（清淤CU值）.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 16896
+  },
+  {
+    "id": "d5d8b819bf9e",
+    "name": "回弹法检测混凝土强度计算表（英文）.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/回弹法检测混凝土强度计算表（英文）.xls",
+    "path": "resources/回弹法检测混凝土强度计算表（英文）.xls",
+    "extension": "xls",
+    "category": "混凝土检测",
+    "cost": 2,
+    "size": 174592
+  },
+  {
+    "id": "d1166e81bd48",
+    "name": "回弹法检测混凝土强度自动计算表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/回弹法检测混凝土强度自动计算表.xls",
+    "path": "resources/回弹法检测混凝土强度自动计算表.xls",
+    "extension": "xls",
+    "category": "混凝土检测",
+    "cost": 2,
+    "size": 100864
+  },
+  {
+    "id": "579652457592",
+    "name": "回弹法自动计算表(最新版9个).xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/回弹法自动计算表(最新版9个).xls",
+    "path": "resources/回弹法自动计算表(最新版9个).xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 208896
+  },
+  {
+    "id": "b381a5b9eb53",
+    "name": "混凝土、水泥抗压强度换算表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/混凝土、水泥抗压强度换算表.xls",
+    "path": "resources/混凝土、水泥抗压强度换算表.xls",
+    "extension": "xls",
+    "category": "水泥材料",
+    "cost": 1,
+    "size": 26624
+  },
+  {
+    "id": "f89c2a57de46",
+    "name": "混凝土回弹值计算及换算表格.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/混凝土回弹值计算及换算表格.xls",
+    "path": "resources/混凝土回弹值计算及换算表格.xls",
+    "extension": "xls",
+    "category": "混凝土检测",
+    "cost": 2,
+    "size": 142848
+  },
+  {
+    "id": "d3b0626e6f0f",
+    "name": "混凝土抗冻试验报告.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/混凝土抗冻试验报告.xls",
+    "path": "resources/混凝土抗冻试验报告.xls",
+    "extension": "xls",
+    "category": "混凝土检测",
+    "cost": 1,
+    "size": 22528
+  },
+  {
+    "id": "f755c9f5de66",
+    "name": "混凝土配比自动计算.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/混凝土配比自动计算.xls",
+    "path": "resources/混凝土配比自动计算.xls",
+    "extension": "xls",
+    "category": "混凝土检测",
+    "cost": 2,
+    "size": 24576
+  },
+  {
+    "id": "68cca22aaef7",
+    "name": "混凝土配合比设计C35P6.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/混凝土配合比设计C35P6.xls",
+    "path": "resources/混凝土配合比设计C35P6.xls",
+    "extension": "xls",
+    "category": "配合比设计",
+    "cost": 2,
+    "size": 1944576
+  },
+  {
+    "id": "111336f0d8fa",
+    "name": "混凝土强度回弹计算小软件.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/混凝土强度回弹计算小软件.xls",
+    "path": "resources/混凝土强度回弹计算小软件.xls",
+    "extension": "xls",
+    "category": "混凝土检测",
+    "cost": 2,
+    "size": 379392
+  },
+  {
+    "id": "012f4b03b484",
+    "name": "混凝土取样、试件、消耗台账 (自动保存的).xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/混凝土取样、试件、消耗台账 (自动保存的).xls",
+    "path": "resources/混凝土取样、试件、消耗台账 (自动保存的).xls",
+    "extension": "xls",
+    "category": "混凝土检测",
+    "cost": 2,
+    "size": 231424
+  },
+  {
+    "id": "b22f7a56aaa1",
+    "name": "击实计算（修约、绘图、选取最大干密度） (1).xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/击实计算（修约、绘图、选取最大干密度） (1).xls",
+    "path": "resources/击实计算（修约、绘图、选取最大干密度） (1).xls",
+    "extension": "xls",
+    "category": "土工击实",
+    "cost": 2,
+    "size": 213504
+  },
+  {
+    "id": "db00322a43ff",
+    "name": "击实计算（修约、绘图、选取最大干密度）.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/击实计算（修约、绘图、选取最大干密度）.xls",
+    "path": "resources/击实计算（修约、绘图、选取最大干密度）.xls",
+    "extension": "xls",
+    "category": "土工击实",
+    "cost": 2,
+    "size": 213504
+  },
+  {
+    "id": "fa866ceb0ed8",
+    "name": "击实试验自动计算表格.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/击实试验自动计算表格.xls",
+    "path": "resources/击实试验自动计算表格.xls",
+    "extension": "xls",
+    "category": "土工击实",
+    "cost": 2,
+    "size": 41472
+  },
+  {
+    "id": "fbf961a44e80",
+    "name": "机制砂压碎值计算方法实例.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/机制砂压碎值计算方法实例.xls",
+    "path": "resources/机制砂压碎值计算方法实例.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 34304
+  },
+  {
+    "id": "5f15def45302",
+    "name": "基层集料自动计算F9.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/基层集料自动计算F9.xlsx",
+    "path": "resources/基层集料自动计算F9.xlsx",
+    "extension": "xlsx",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 179470
+  },
+  {
+    "id": "d512ad71c647",
+    "name": "级配碎石配合比.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/级配碎石配合比 .xls",
+    "path": "resources/级配碎石配合比.xls",
+    "extension": "xls",
+    "category": "配合比设计",
+    "cost": 2,
+    "size": 31744
+  },
+  {
+    "id": "14b864624645",
+    "name": "级配碎石试验报告.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/级配碎石试验报告.xls",
+    "path": "resources/级配碎石试验报告.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 112640
+  },
+  {
+    "id": "01828ca2da69",
+    "name": "集料压碎值仪.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/集料压碎值仪.xls",
+    "path": "resources/集料压碎值仪.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 26624
+  },
+  {
+    "id": "e22241401723",
+    "name": "集料自动计算.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/集料自动计算.xls",
+    "path": "resources/集料自动计算.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 93696
+  },
+  {
+    "id": "eef418b7bfe0",
+    "name": "监视和测量仪器设备（完） 2016.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/监视和测量仪器设备（完） 2016.xlsx",
+    "path": "resources/监视和测量仪器设备（完） 2016.xlsx",
+    "extension": "xlsx",
+    "category": "仪器设备",
+    "cost": 1,
+    "size": 157249
+  },
+  {
+    "id": "08c1b3bb5aa0",
+    "name": "静载试验计算书32QB-0020.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/静载试验计算书32QB-0020.xlsx",
+    "path": "resources/静载试验计算书32QB-0020.xlsx",
+    "extension": "xlsx",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 105880
+  },
+  {
+    "id": "fbebf44dc5dc",
+    "name": "力学性性能试验加荷速率一览表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/力学性性能试验加荷速率一览表.xls",
+    "path": "resources/力学性性能试验加荷速率一览表.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 0,
+    "size": 57856
+  },
+  {
+    "id": "121a4de18475",
+    "name": "沥青压实度全自动生成系统（表干法）.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/沥青压实度全自动生成系统（表干法）.xls",
+    "path": "resources/沥青压实度全自动生成系统（表干法）.xls",
+    "extension": "xls",
+    "category": "沥青及混合料",
+    "cost": 2,
+    "size": 58368
+  },
+  {
+    "id": "9bd8caf89353",
+    "name": "沥青压实度自动生成系统.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/沥青压实度自动生成系统.xls",
+    "path": "resources/沥青压实度自动生成系统.xls",
+    "extension": "xls",
+    "category": "沥青及混合料",
+    "cost": 2,
+    "size": 34816
+  },
+  {
+    "id": "637a5d9aced4",
+    "name": "联合液塑限自动计算程序英文版.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/联合液塑限自动计算程序英文版.xls",
+    "path": "resources/联合液塑限自动计算程序英文版.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 48640
+  },
+  {
+    "id": "d1a9446e8954",
+    "name": "量砂密度标定.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/量砂密度标定.xls",
+    "path": "resources/量砂密度标定.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 96768
+  },
+  {
+    "id": "bb70ef9415d3",
+    "name": "路基压实平行检测.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/路基压实平行检测.xlsx",
+    "path": "resources/路基压实平行检测.xlsx",
+    "extension": "xlsx",
+    "category": "压实度检测",
+    "cost": 1,
+    "size": 37032
+  },
+  {
+    "id": "4b01154db187",
+    "name": "路面仪器检定校准结果确认表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/路面仪器检定校准结果确认表.xls",
+    "path": "resources/路面仪器检定校准结果确认表.xls",
+    "extension": "xls",
+    "category": "仪器设备",
+    "cost": 1,
+    "size": 372224
+  },
+  {
+    "id": "ab97990c8a85",
+    "name": "洛氏硬度报告.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/洛氏硬度报告.xlsx",
+    "path": "resources/洛氏硬度报告.xlsx",
+    "extension": "xlsx",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 94982
+  },
+  {
+    "id": "078fe3710690",
+    "name": "锚杆抗拔试验报告.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/锚杆抗拔试验报告.xls",
+    "path": "resources/锚杆抗拔试验报告.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 27136
+  },
+  {
+    "id": "54d2f77ae17d",
+    "name": "摩擦面抗滑移系数检验原始记录.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/摩擦面抗滑移系数检验原始记录.xls",
+    "path": "resources/摩擦面抗滑移系数检验原始记录.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 19456
+  },
+  {
+    "id": "bf55e1f1715a",
+    "name": "平整度表格.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/平整度表格.xlsx",
+    "path": "resources/平整度表格.xlsx",
+    "extension": "xlsx",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 12746
+  },
+  {
+    "id": "9e9fb86a2c04",
+    "name": "奇进偶舍四舍五入新.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/奇进偶舍四舍五入新.xlsx",
+    "path": "resources/奇进偶舍四舍五入新.xlsx",
+    "extension": "xlsx",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 10897
+  },
+  {
+    "id": "9a1ac8c479b3",
+    "name": "强度评定部位.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/强度评定部位.xls",
+    "path": "resources/强度评定部位.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 914944
+  },
+  {
+    "id": "443c441f657e",
+    "name": "取芯手动输入自动计算（表干法）.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/取芯手动输入自动计算（表干法）.xls",
+    "path": "resources/取芯手动输入自动计算（表干法）.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 31744
+  },
+  {
+    "id": "becc90a5cbf0",
+    "name": "砂率计算.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/砂率计算.xls",
+    "path": "resources/砂率计算.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 176128
+  },
+  {
+    "id": "1b9e4b0c5070",
+    "name": "烧结普通砖试验记录.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/烧结普通砖试验记录.xlsx",
+    "path": "resources/烧结普通砖试验记录.xlsx",
+    "extension": "xlsx",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 27307
+  },
+  {
+    "id": "daf8aef6992c",
+    "name": "石灰剂量原始记录表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/石灰剂量原始记录表.xls",
+    "path": "resources/石灰剂量原始记录表.xls",
+    "extension": "xls",
+    "category": "灰土灰剂量",
+    "cost": 1,
+    "size": 28160
+  },
+  {
+    "id": "408ecedd2425",
+    "name": "市政工程试验常规检测项目、检测标准、检测频率、取样方法.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/市政工程试验常规检测项目、检测标准、检测频率、取样方法.xls",
+    "path": "resources/市政工程试验常规检测项目、检测标准、检测频率、取样方法.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 24576
+  },
+  {
+    "id": "596220cbdc1c",
+    "name": "市政工程试验室用标准规范清单(2017).xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/市政工程试验室用标准规范清单(2017).xls",
+    "path": "resources/市政工程试验室用标准规范清单(2017).xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 0,
+    "size": 34816
+  },
+  {
+    "id": "996ad5b7aee4",
+    "name": "市政送检汇总表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/市政送检汇总表.xls",
+    "path": "resources/市政送检汇总表.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 160256
+  },
+  {
+    "id": "2314fb0c8732",
+    "name": "试模校验记录表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/试模校验记录表.xls",
+    "path": "resources/试模校验记录表.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 29696
+  },
+  {
+    "id": "33941ce566da",
+    "name": "试验室环境温度、湿度控制一览表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/试验室环境温度、湿度控制一览表.xls",
+    "path": "resources/试验室环境温度、湿度控制一览表.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 0,
+    "size": 23040
+  },
+  {
+    "id": "c08ae8696a4a",
+    "name": "试验室配合比.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/试验室配合比.xlsx",
+    "path": "resources/试验室配合比.xlsx",
+    "extension": "xlsx",
+    "category": "配合比设计",
+    "cost": 2,
+    "size": 31778
+  },
+  {
+    "id": "7cae4db29ae2",
+    "name": "试验数据修约汇总.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/试验数据修约汇总.xls",
+    "path": "resources/试验数据修约汇总.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 20992
+  },
+  {
+    "id": "4bef9a4ca66c",
+    "name": "水泥粉煤灰.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/水泥粉煤灰.xls",
+    "path": "resources/水泥粉煤灰.xls",
+    "extension": "xls",
+    "category": "水泥材料",
+    "cost": 1,
+    "size": 70144
+  },
+  {
+    "id": "234237bcd79c",
+    "name": "水泥化学分析计算.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/水泥化学分析计算.xls",
+    "path": "resources/水泥化学分析计算.xls",
+    "extension": "xls",
+    "category": "水泥材料",
+    "cost": 2,
+    "size": 13824
+  },
+  {
+    "id": "4dd994280c0d",
+    "name": "水泥混凝土用细集料.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/水泥混凝土用细集料.xls",
+    "path": "resources/水泥混凝土用细集料.xls",
+    "extension": "xls",
+    "category": "水泥材料",
+    "cost": 1,
+    "size": 81920
+  },
+  {
+    "id": "a226c0936871",
+    "name": "水泥减水剂相容性试验记录.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/水泥减水剂相容性试验记录.xlsx",
+    "path": "resources/水泥减水剂相容性试验记录.xlsx",
+    "extension": "xlsx",
+    "category": "水泥材料",
+    "cost": 1,
+    "size": 14026
+  },
+  {
+    "id": "ec9ff3f9f8bd",
+    "name": "水泥留样条.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/水泥留样条.xlsx",
+    "path": "resources/水泥留样条.xlsx",
+    "extension": "xlsx",
+    "category": "水泥材料",
+    "cost": 1,
+    "size": 12900
+  },
+  {
+    "id": "66cb7ca22245",
+    "name": "水泥强度自动计算.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/水泥强度自动计算.xls",
+    "path": "resources/水泥强度自动计算.xls",
+    "extension": "xls",
+    "category": "水泥材料",
+    "cost": 2,
+    "size": 38400
+  },
+  {
+    "id": "2c1e61e1e975",
+    "name": "水筛分粗集料自动计算.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/水筛分粗集料自动计算.xlsx",
+    "path": "resources/水筛分粗集料自动计算.xlsx",
+    "extension": "xlsx",
+    "category": "集料筛分",
+    "cost": 2,
+    "size": 20212
+  },
+  {
+    "id": "92e494ccd4f4",
+    "name": "水稳层配比原始记录及自动计算.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/水稳层配比原始记录及自动计算.xls",
+    "path": "resources/水稳层配比原始记录及自动计算.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 43520
+  },
+  {
+    "id": "5ed3a682b18c",
+    "name": "水稳层配比原始记录及自动计算11.5东园西路.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/水稳层配比原始记录及自动计算11.5东园西路.xls",
+    "path": "resources/水稳层配比原始记录及自动计算11.5东园西路.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 37376
+  },
+  {
+    "id": "c69e19ab81c7",
+    "name": "水运工程试验检测标准、规范、规程现行参考.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/水运工程试验检测标准、规范、规程现行参考.xls",
+    "path": "resources/水运工程试验检测标准、规范、规程现行参考.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 0,
+    "size": 215552
+  },
+  {
+    "id": "83c184ce3a2f",
+    "name": "算沥青路面弯沉试验.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/算沥青路面弯沉试验.xls",
+    "path": "resources/算沥青路面弯沉试验.xls",
+    "extension": "xls",
+    "category": "沥青及混合料",
+    "cost": 1,
+    "size": 82432
+  },
+  {
+    "id": "b3424f447e70",
+    "name": "碎石掺配.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/碎石掺配.xls",
+    "path": "resources/碎石掺配.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 90112
+  },
+  {
+    "id": "1e2852decceb",
+    "name": "体积法配合比设计小程序(简易版）.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/体积法配合比设计小程序(简易版）.xls",
+    "path": "resources/体积法配合比设计小程序(简易版）.xls",
+    "extension": "xls",
+    "category": "配合比设计",
+    "cost": 2,
+    "size": 62976
+  },
+  {
+    "id": "1436f41aaab0",
+    "name": "铁路项目试验室的标准、规范清单.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/铁路项目试验室的标准、规范清单.xls",
+    "path": "resources/铁路项目试验室的标准、规范清单.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 0,
+    "size": 42496
+  },
+  {
+    "id": "a533d248a9e7",
+    "name": "砼抗压计算表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/砼抗压计算表.xls",
+    "path": "resources/砼抗压计算表.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 43008
+  },
+  {
+    "id": "fababe8f1848",
+    "name": "砼配合比记录表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/砼配合比记录表.xls",
+    "path": "resources/砼配合比记录表.xls",
+    "extension": "xls",
+    "category": "配合比设计",
+    "cost": 2,
+    "size": 95744
+  },
+  {
+    "id": "bd2214c56621",
+    "name": "土的工程分类和不均匀曲率系数计算表(2007规程).xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/土的工程分类和不均匀曲率系数计算表(2007规程).xls",
+    "path": "resources/土的工程分类和不均匀曲率系数计算表(2007规程).xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 34304
+  },
+  {
+    "id": "04e1e0f824b9",
+    "name": "土的颗粒分析试验报告(筛分法)私藏版.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/土的颗粒分析试验报告(筛分法)私藏版.xls",
+    "path": "resources/土的颗粒分析试验报告(筛分法)私藏版.xls",
+    "extension": "xls",
+    "category": "集料筛分",
+    "cost": 1,
+    "size": 75264
+  },
+  {
+    "id": "6c6eae300bae",
+    "name": "土的颗粒分析试验报告(筛分法)珍藏版.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/土的颗粒分析试验报告(筛分法)珍藏版.xlsx",
+    "path": "resources/土的颗粒分析试验报告(筛分法)珍藏版.xlsx",
+    "extension": "xlsx",
+    "category": "集料筛分",
+    "cost": 1,
+    "size": 33339
+  },
+  {
+    "id": "dcda92e013d6",
+    "name": "土工标击、CBR、液塑限、颗粒分析.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/土工标击、CBR、液塑限、颗粒分析.xls",
+    "path": "resources/土工标击、CBR、液塑限、颗粒分析.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 523776
+  },
+  {
+    "id": "499945e107aa",
+    "name": "土工击实击实试验计算表格.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/土工击实击实试验计算表格.xls",
+    "path": "resources/土工击实击实试验计算表格.xls",
+    "extension": "xls",
+    "category": "土工击实",
+    "cost": 2,
+    "size": 118272
+  },
+  {
+    "id": "33af9c084a5f",
+    "name": "土工全套资料(可更换表格).xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/土工全套资料(可更换表格).xls",
+    "path": "resources/土工全套资料(可更换表格).xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 233472
+  },
+  {
+    "id": "ef9b11b026ac",
+    "name": "土工试验.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/土工试验.xlsx",
+    "path": "resources/土工试验.xlsx",
+    "extension": "xlsx",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 107452
+  },
+  {
+    "id": "5cd29c5be39c",
+    "name": "土工试验全套（ 利用方2）.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/土工试验全套（ 利用方2）.xls",
+    "path": "resources/土工试验全套（ 利用方2）.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 395776
+  },
+  {
+    "id": "ba1d6ec75910",
+    "name": "土筛分曲线程序.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/土筛分曲线程序.xls",
+    "path": "resources/土筛分曲线程序.xls",
+    "extension": "xls",
+    "category": "集料筛分",
+    "cost": 1,
+    "size": 38912
+  },
+  {
+    "id": "77a060f4e25e",
+    "name": "外加剂公式100(自动).xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/外加剂公式100(自动).xls",
+    "path": "resources/外加剂公式100(自动).xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 58368
+  },
+  {
+    "id": "7a5725aeedc2",
+    "name": "外加剂自动计算.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/外加剂自动计算.xls",
+    "path": "resources/外加剂自动计算.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 99328
+  },
+  {
+    "id": "725eee5a816b",
+    "name": "弯沉自动计算程序.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/弯沉自动计算程序.xls",
+    "path": "resources/弯沉自动计算程序.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 100352
+  },
+  {
+    "id": "d6045190b0e1",
+    "name": "无侧限抗压强度自动计算.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/无侧限抗压强度自动计算.xls",
+    "path": "resources/无侧限抗压强度自动计算.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 43008
+  },
+  {
+    "id": "4c343ffa8d49",
+    "name": "无机结合料击实配料单.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/无机结合料击实配料单.xls",
+    "path": "resources/无机结合料击实配料单.xls",
+    "extension": "xls",
+    "category": "土工击实",
+    "cost": 1,
+    "size": 19968
+  },
+  {
+    "id": "717284f2505b",
+    "name": "细集料筛分（随机）.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/细集料筛分（随机）.xls",
+    "path": "resources/细集料筛分（随机）.xls",
+    "extension": "xls",
+    "category": "集料筛分",
+    "cost": 1,
+    "size": 27648
+  },
+  {
+    "id": "51a22d283a6a",
+    "name": "现行交通规范大全(附下载地址).xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/现行交通规范大全(附下载地址).xlsx",
+    "path": "resources/现行交通规范大全(附下载地址).xlsx",
+    "extension": "xlsx",
+    "category": "通用表格",
+    "cost": 0,
+    "size": 22049
+  },
+  {
+    "id": "f1971ec4427e",
+    "name": "新月报格式4月.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/新月报格式4月.xlsx",
+    "path": "resources/新月报格式4月.xlsx",
+    "extension": "xlsx",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 17320
+  },
+  {
+    "id": "8f905eadf83d",
+    "name": "压实度 施工2015.12.07.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/压实度 施工2015.12.07.xls",
+    "path": "resources/压实度 施工2015.12.07.xls",
+    "extension": "xls",
+    "category": "压实度检测",
+    "cost": 1,
+    "size": 161280
+  },
+  {
+    "id": "aa574f21a6c5",
+    "name": "压实度计算表131124版.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/压实度计算表131124版.xls",
+    "path": "resources/压实度计算表131124版.xls",
+    "extension": "xls",
+    "category": "压实度检测",
+    "cost": 2,
+    "size": 1321984
+  },
+  {
+    "id": "1043c7f38021",
+    "name": "压实度自动计算表格.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/压实度自动计算表格.xls",
+    "path": "resources/压实度自动计算表格.xls",
+    "extension": "xls",
+    "category": "压实度检测",
+    "cost": 2,
+    "size": 211456
+  },
+  {
+    "id": "7fe5519e2699",
+    "name": "养护箱温湿度记录表.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/养护箱温湿度记录表.xls",
+    "path": "resources/养护箱温湿度记录表.xls",
+    "extension": "xls",
+    "category": "环境记录",
+    "cost": 1,
+    "size": 20480
+  },
+  {
+    "id": "72d8cf793ae4",
+    "name": "液塑限程序（计算）.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/液塑限程序（计算）.xls",
+    "path": "resources/液塑限程序（计算）.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 226816
+  },
+  {
+    "id": "a0b199c88b4d",
+    "name": "仪器设备履历卡.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/仪器设备履历卡.xls",
+    "path": "resources/仪器设备履历卡.xls",
+    "extension": "xls",
+    "category": "仪器设备",
+    "cost": 1,
+    "size": 21504
+  },
+  {
+    "id": "4f994833bc9d",
+    "name": "仪器自校记录表格90个.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/仪器自校记录表格90个.xls",
+    "path": "resources/仪器自校记录表格90个.xls",
+    "extension": "xls",
+    "category": "仪器设备",
+    "cost": 1,
+    "size": 699392
+  },
+  {
+    "id": "0c6b9b72f080",
+    "name": "英文版水泥检测报告.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/英文版水泥检测报告.xls",
+    "path": "resources/英文版水泥检测报告.xls",
+    "extension": "xls",
+    "category": "水泥材料",
+    "cost": 1,
+    "size": 42496
+  },
+  {
+    "id": "e6ead7e32e10",
+    "name": "原材料试验记录计算表23个.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/原材料试验记录计算表23个.xls",
+    "path": "resources/原材料试验记录计算表23个.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 292864
+  },
+  {
+    "id": "9db33542e1da",
+    "name": "原材自动计算表11个.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/原材自动计算表11个.xlsx",
+    "path": "resources/原材自动计算表11个.xlsx",
+    "extension": "xlsx",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 79502
+  },
+  {
+    "id": "f32abaf16287",
+    "name": "钻芯报告.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/钻芯报告.xls",
+    "path": "resources/钻芯报告.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 22528
+  },
+  {
+    "id": "f000542fe7f0",
+    "name": "最近灰土压实度编程.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/最近灰土压实度编程.xls",
+    "path": "resources/最近灰土压实度编程.xls",
+    "extension": "xls",
+    "category": "压实度检测",
+    "cost": 1,
+    "size": 103424
+  },
+  {
+    "id": "1ffcbefdf82a",
+    "name": "最新公路工程试验常规检测项目、检测标准、检测频率、取样方法.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/最新公路工程试验常规检测项目、检测标准、检测频率、取样方法.xls",
+    "path": "resources/最新公路工程试验常规检测项目、检测标准、检测频率、取样方法.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 136192
+  },
+  {
+    "id": "d06d09f37c90",
+    "name": "AC-25C生产级配.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/AC-25C生产级配.xls",
+    "path": "resources/AC-25C生产级配.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 62976
+  },
+  {
+    "id": "0878719d7cf1",
+    "name": "C10.6隧道超前导管注浆记录表.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/C10.6隧道超前导管注浆记录表.xlsx",
+    "path": "resources/C10.6隧道超前导管注浆记录表.xlsx",
+    "extension": "xlsx",
+    "category": "通用表格",
+    "cost": 1,
+    "size": 24265
+  },
+  {
+    "id": "49f014a9e643",
+    "name": "D-26-2-细集料筛分试验记录(水洗法).xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/D-26-2-细集料筛分试验记录(水洗法).xls",
+    "path": "resources/D-26-2-细集料筛分试验记录(水洗法).xls",
+    "extension": "xls",
+    "category": "集料筛分",
+    "cost": 1,
+    "size": 591872
+  },
+  {
+    "id": "79e8a7ec85a9",
+    "name": "EDTA计算.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/EDTA计算.xls",
+    "path": "resources/EDTA计算.xls",
+    "extension": "xls",
+    "category": "灰剂量检测",
+    "cost": 2,
+    "size": 20992
+  },
+  {
+    "id": "c98ae878e3e9",
+    "name": "JGJ 55-2011体积法配合比计算书复件.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/JGJ 55-2011体积法配合比计算书复件.xls",
+    "path": "resources/JGJ 55-2011体积法配合比计算书复件.xls",
+    "extension": "xls",
+    "category": "配合比设计",
+    "cost": 2,
+    "size": 47104
+  },
+  {
+    "id": "5bb1c4614560",
+    "name": "K30自动校验.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/K30自动校验.xls",
+    "path": "resources/K30自动校验.xls",
+    "extension": "xls",
+    "category": "通用表格",
+    "cost": 2,
+    "size": 70144
+  },
+  {
+    "id": "97cda7082328",
+    "name": "M7.5砂浆配合比.xlsx",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/M7.5砂浆配合比.xlsx",
+    "path": "resources/M7.5砂浆配合比.xlsx",
+    "extension": "xlsx",
+    "category": "配合比设计",
+    "cost": 2,
+    "size": 65526
+  },
+  {
+    "id": "78be27e3219a",
+    "name": "SMA-13S沥青混凝土配合比设计.xls",
+    "originalPath": "工程质量检测常用Excel计算表格（139套）/工程质量检测常用Excel计算表格（139套）/SMA-13S沥青混凝土配合比设计.xls",
+    "path": "resources/SMA-13S沥青混凝土配合比设计.xls",
+    "extension": "xls",
+    "category": "配合比设计",
+    "cost": 2,
+    "size": 86528
+  }
+]

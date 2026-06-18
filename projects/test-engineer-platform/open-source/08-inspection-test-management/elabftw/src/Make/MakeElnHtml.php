@@ -1,0 +1,59 @@
+<?php
+
+/**
+ * @author Nicolas CARPi <nico-git@deltablot.email>
+ * @copyright 2025 Nicolas CARPi
+ * @see https://www.elabftw.net Official website
+ * @license AGPL-3.0
+ * @package elabftw
+ */
+
+declare(strict_types=1);
+
+namespace Elabftw\Make;
+
+use Elabftw\Models\Instance2Rors;
+use Elabftw\Models\Teams2Rors;
+use Elabftw\Models\Users2Rors;
+use Elabftw\Models\Users\Users;
+use ZipStream\ZipStream;
+use Override;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\HttpFoundation\Response;
+
+use function json_encode;
+
+/**
+ * Make an ELN html file
+ */
+final class MakeElnHtml extends MakeEln
+{
+    public function __construct(
+        protected LoggerInterface $logger,
+        protected ZipStream $Zip,
+        protected Users $requester,
+        protected array $entityArr,
+        protected Instance2Rors $instance2Rors,
+        protected Teams2Rors $teams2Rors,
+        protected Users2Rors $users2Rors,
+    ) {
+        parent::__construct($logger, $Zip, $requester, $entityArr, $instance2Rors, $teams2Rors, $users2Rors);
+    }
+
+    #[Override]
+    public function getResponse(): Response
+    {
+        $this->processEntityArr();
+        $jsonLd = json_encode($this->dataArr, JSON_THROW_ON_ERROR, 512);
+        return new Response($this->crateToHtml($jsonLd, $this->getRootNode()));
+    }
+
+    #[Override]
+    /**
+     * @param resource $stream
+     */
+    protected function addAttachedFileInZip(string $path, mixed $stream): void
+    {
+        return;
+    }
+}

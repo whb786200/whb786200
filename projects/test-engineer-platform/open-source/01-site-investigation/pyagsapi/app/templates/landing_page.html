@@ -1,0 +1,196 @@
+{% extends "_base.html" %}
+{% block title %}Home{% endblock %}
+{% block body %}
+
+
+<section id="identification">
+    <h1>AGS4 File Utilities Tool and API</h1>
+    <p>This tool and associated <a href="/docs/">API</a> allow schema validation, data validation and conversion of your <a href="https://www.ags.org.uk/data-format/">AGS files</a>. Files are not saved or stored by this tool. Also included are links to our other AGS data related services and applications</p>
+    <ul>
+        <li class="open"><a href="#ags_data">Data Discovery</a></li>
+        <li><a href="#validator">Schema & Data Validator</a></li>
+        <li><a href="#deposit">Data Submission</a></li>
+        <li><a href="#converter">File Conversion</a></li>
+        <li><a href="#openapi">API Documentation</a></li>
+    </ul>
+</section>
+
+<section id="deposit" class="tabbed">
+  <br>
+  <h2>AGS Data Submission</h2>
+  <br>
+  <p>Deposit your AGS data with the National Geoscience Data Centre (NGDC) <a href="http://transfer.bgs.ac.uk/ingestion"><b>here</b></a>.</p>
+  <p>Please validate your files prior to submission. For further details please see <a href="https://www.bgs.ac.uk/technologies/geotechnical-data-services/">geotechnical data services.</a></p>
+  <br>
+  <br>
+</section>
+
+<section id="validator" class="tabbed">
+    <h3>AGS4 Validation </h3>
+      <p>Performs validation using the <a href="https://gitlab.com/ags-data-format-wg/ags-python-library.">Official AGS Python Library</a> <strong>{{ agslib_version }}</strong>, this implements checks of the rules as written in the <strong>AGS data format standard v4.x.</strong></p>
+      <p style="color:red">If you're using AGS Data Format Standard v3.x use our legacy <a href="https://webapps.bgs.ac.uk/data/ags/validation/index.cfm">AGS Validator</a></p>
+    <br>
+    <h3>BGS Data Validation</h3>
+      <p>Your files will be validated against the below rules as defined by BGS/NGDC.</p>
+      <button type="button" class="collapsible">National Geoscience Data Centre requirements</button>
+      <div class="content">
+      <table class="tg">
+      <thead>
+        <tr>
+          <th class="tg-0lax">Check</th>
+          <th class="tg-0lax">Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="tg-0lax"> Required Groups</td>
+          <td class="tg-0lax">Groups shall include PROJ, LOCA or HOLE, ABBR, TYPE, UNIT</td>
+        </tr>
+        <tr>
+          <td class="tg-0lax"> Required BGS Groups</td>
+          <td class="tg-0lax">Groups may include GEOL - required for BGS submission</td>
+        </tr>
+        <tr>
+          <td class="tg-0lax"> Spatial Referencing</td>
+          <td class="tg-0lax">Spatial referencing system defined in LOCA_GREF, LOCA_LREF or LOCA_LLZ.&nbsp;&nbsp;&nbsp;Example: LOCA_GREF:OSGB, LOCA_LREF:London Grid 1, LOCA_LLZ:WGS84</td>
+        </tr>
+        <tr>
+          <td class="tg-0lax"> Easting/Northing present.</td>
+          <td class="tg-0lax">LOCA_NATE and LOCA_NATN are populated. Zeros or null do not pass</td>
+        </tr>
+        <tr>
+          <td class="tg-0lax"> Easting/Northing values fall within&nbsp;&nbsp;&nbsp;reasonable range</td>
+          <td class="tg-0lax">LOCA_NATE values inside 100,000 to 800,000 range. LOCA_NATN values inside&nbsp;&nbsp;&nbsp;100,000 to 1,400,000 range</td>
+        </tr>
+        <tr>
+          <td class="tg-0lax"> Drill Depth (HDPH) present</td>
+          <td class="tg-0lax">HDPH_TOP does not contain null values. HDPH_BASE does not contain zero or&nbsp;&nbsp;&nbsp;null values. </td>
+        </tr>
+        <tr>
+          <td class="tg-0lax"> Drill depths (HDPH) have corresponding&nbsp;&nbsp;&nbsp;records in GEOL table</td>
+          <td class="tg-0lax">Checking HDPH LOCA_IDs are in GEOL group AND GEOL LOCA_IDs are in HDPH&nbsp;&nbsp;&nbsp;group</td>
+        </tr>
+        <tr>
+          <td class="tg-0lax"> Locations are onshore Great Britain or&nbsp;&nbsp;&nbsp;Northern Ireland</td>
+          <td class="tg-0lax">Note: If using Irish grid and GREF not entered, tool cannot currently&nbsp;&nbsp;&nbsp;differentiate from EPSG:27700 (OSGB)</td>
+        </tr>
+        <tr>
+          <td class="tg-0lax"> Any duplication between NATE/NATN, LOCX/LOCY&nbsp;&nbsp;&nbsp;and LON/LAT</td>
+          <td class="tg-0lax">Duplication presumes error in these columns which should be checked</td>
+        </tr>
+        <tr>
+          <td class="tg-0lax"> LOCA_ID references are valid</td>
+          <td class="tg-0lax">Checks all groups which have LOCA_ID are populated with a valid record&nbsp;&nbsp;&nbsp;present in the LOCA Group.</td>
+        </tr>
+        <tr>
+          <td class="tg-0lax"> SAMP_ID or LOCA_ID, SAMP_TOP, SAMP_TYPE,&nbsp;&nbsp;&nbsp;SAMP_REF references are valid</td>
+          <td class="tg-0lax">LOCA_ID, SAMP_TOP, SAMP_TYPE, SAMP_REF are all populated, not null, and&nbsp;&nbsp;&nbsp;unique in combination within SAMP group AND all LOCA_ID values are present in&nbsp;&nbsp;&nbsp;the LOCA group. Also all groups that reference the SAMP group as a parent,&nbsp;&nbsp;&nbsp;use either the SAMP_ID field or the combination of LOCA_ID, SAMP_TOP,&nbsp;&nbsp;&nbsp;SAMP_TYPE, SAMP_REF and that the parent exists in the SAMP group.</td>
+        </tr>
+      </tbody>
+      </table>
+      <h4>Future data validation rules: (Coming Soon)</h4>
+      <ul>
+      <li>LOC_LAT/LONG lie in reasonable range</li>
+      </ul>
+      </div>
+    <br>
+    <form action="{{ api_version_path }}/validate/" enctype="multipart/form-data" method="post" id="validateForm">
+        <br>
+      <fieldset>
+          <legend>Select AGS Version - if "None", tool uses version specified in TRAN_AGS, if not specified, tool uses v4.1.1.</legend>
+          <input type="radio" id="none" name="std_dictionary" value="" checked>
+          <label for="none">None</label>
+          <input type="radio" id="4.0.3" name="std_dictionary" value="v4_0_3">
+          <label for="4.0.3">4.0.3</label>
+          <input type="radio" id="4.0.4" name="std_dictionary" value="v4_0_4">
+          <label for="4.0.4">4.0.4</label>
+          <input type="radio" id="4.1" name="std_dictionary" value="v4_1">
+          <label for="4.1">4.1</label>
+          <input type="radio" id="4.1.1" name="std_dictionary" value="v4_1_1">
+          <label for="4.1.1">4.1.1</label>
+      </fieldset>
+        <br>
+      <fieldset>
+        <legend>Select checkers</legend>
+        <input type="checkbox" id="ags_validate" name="checkers" value="ags" checked>
+        <label for="ags_validate"> I would like to run AGS schema validation</label><br>
+        <input type="checkbox" id="bgs_validate" name="checkers" value="bgs" checked>
+        <label for="bgs_validate"> I would like to run BGS data validation</label><br>
+      </fieldset>
+        <br>
+      <fieldset>
+          <legend>Select response format:</legend>
+          <input type="radio" id="json" name="fmt" value="json">
+          <label for="json">JSON</label>
+          <input type="radio" id="text" name="fmt" value="text">
+          <label for="text">Plain Text</label><br>
+      </fieldset>
+        <br>
+        <fieldset>
+          <legend>If HTML show LOCA features on a map / If JSON include GeoJSON</legend>
+          <input type="radio" id="return_geometry_true" name="return_geometry" value="true" checked="checked">
+          <label for="return_geometry_true">Yes</label>
+          <input type="radio" id="return_geometry_false" name="return_geometry" value="false">
+          <label for="return_geometry_false">No</label><br>
+      </fieldset>
+        <br>
+      <fieldset>
+          <legend>Select .ags or .zip of ags file(s) for validation (v4.x only) <b>(50 Mb Maximum)</b></legend>
+          <input name="files" type="file" multiple>
+          <input type="submit" class="submitBtn" value="Validate">
+      </fieldset>
+    </form>
+</section>
+
+<section id="ags_data" class="tabbed">
+  <p>Use the map below to find AGS data, click on the markers to find borehole information, links to graphical logs, <a href="https://www.bgs.ac.uk/technologies/geotechnical-data-services/ags-download-service/">.ags data download from the NGDC AGS database,</a> and the original submitted AGS data.</p>
+  <div id="mapid"></div>
+  <p><b>The map will show a maximum of 100 AGS markers - users may need to pan/zoom to display markers of interest. </b></p>
+  <p><b>If no AGS Submission Record is shown at the link provided there is likely a legacy confidentiality restriction.</b></p>
+  <br>
+  <p>The <b><a href="https://www.bgs.ac.uk/technologies/geotechnical-data-services/ags-download-service/">AGS Download Service</a></b> is available to download AGS data for individual boreholes via the marker pop up menu, or up to 50 boreholes based on a spatial search (bounding box or polygon). A zip file will be supplied containing one or more .ags files, on a per project basis. For example:</p>
+    <ul>
+      <li>Selecting 50 boreholes from 50 different PROJ ID, then 50 .ags files will be supplied.</li>
+      <li>Selecting 50 boreholes from a single PROJ ID then only one .ags file will be supplied.</li>
+    </ul>
+</section>
+
+<section id="converter" class="tabbed">
+  <h2>AGS Converter</h2>
+    <div class="tooltip"><p>Convert .ags file(s) to/from .xlsx. You may submit .zip files of .ags and .xlsx files</p>
+      <span class="tooltiptext">Which ever format file is submitted, the opposite will be returned e.g. if 5 .ags files and 3 .xlsx files were submitted the result would be 5 .xlsx files and 3 .ags files</span>
+    </div>
+    <br>
+    <br>
+      <p><b>Note: Submitting invalid files will return a empty .zip with a log file</b></p>
+    <br>
+  <br>
+  <form action="{{ api_version_path }}/convert/" enctype="multipart/form-data" method="post" id="convertForm">
+    <fieldset>
+      <legend>Sort worksheets in .xlsx file using a sorting strategy <strong>(Warning: .ags to .xlsx only. The original group order will be lost)</strong></legend>
+      <input type="radio" id="default" name="sort_tables" value="default" checked="checked">
+      <label for="default" class="tooltip">None<span class="tooltiptext">Maintains Input File Order</span></label><br>
+      <input type="radio" id="alphabetical" name="sort_tables" value="alphabetical">
+      <label for="alphabetical" class="tooltip">Alphabetical<span class="tooltiptext">Group Names</span></label><br>
+      <input type="radio" id="dictionary" name="sort_tables" value="dictionary">
+      <label for="dictionary" class="tooltip">Dictionary<span class="tooltiptext">Standard dictionary defined in TRAN_AGS is used to sort standard groups and the custom dictionary is used for user-defined groups. User-defined groups will appear after standard groups</span></label><br>
+      <input type="radio" id="hierarchical" name="sort_tables" value="hierarchical">
+      <label for="hierarchical" class="tooltip">AGS Standard Hierarchy<span class="tooltiptext">Order as follows: 11 groups outside the PROJ hierarchy appear first. 10 of these are described in Section 3.1 of the standard with the addition of LBST as it is the child of LBSG. Groups under PROJ appear next. Groups which don't belong to either of the previous categories appear last</span></label><br>
+    </fieldset>
+    <br>
+    <fieldset>
+      <legend>Select files <b>(.ags or .zip, 50 Mb Maximum)</b></legend>
+      <input name="files" type="file" multiple>
+      <input type="submit" class="submitBtn" value="Convert" >
+    </fieldset>
+  </form>
+</section>
+
+<section id="openapi" class="tabbed">
+      <h2>API Documentation and definition</h2>
+      <p><a href="/docs/">Documentation (Swagger UI)</a></p>
+      <p><a href="/openapi.json/">OpenAPI Document</a></p>
+      <p><a href="/redoc/">ReDoc</a></p>
+</section>
+
+{% endblock %}

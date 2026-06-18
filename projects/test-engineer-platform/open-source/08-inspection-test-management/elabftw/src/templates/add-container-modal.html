@@ -1,0 +1,46 @@
+{# Add a container modal #}
+<div class='modal fade' id='storageModal' tabindex='-1' role='dialog' aria-labelledby='storageModalLabel'>
+  <div class='modal-dialog modal-lg' role='document'>
+    <div class='modal-content'>
+      <div class='modal-header'>
+        <h4 class='modal-title' id='storageModalLabel'><i class='fas fa-fw fa-warehouse'></i> {{ 'Add container'|trans }}</h4>
+        <button type='button' class='close' data-dismiss='modal' aria-label='{{ 'Close'|trans }}'>
+          <span aria-hidden='true'>&times;</span>
+        </button>
+      </div>
+      <div class='modal-body'>
+        {# STORAGE #}
+        <div class='mb-2'>
+          <h5><label for='containerQtyStoredInput'>{{ 'Adjust container capacity and unit'|trans }}</label></h5>
+          <div class='input-group mb-2'>
+            {# set default value to 1 instead of 0 as we probably want to add at least one thing #}
+            <input type='number' value='1' min='0' step='any' id='containerQtyStoredInput' autocomplete='off' class='form-control' />
+            <div class='input-group-append'>
+              <select class='custom-select brl-none brr-none' id='containerQtyUnitSelect' aria-label='{{ 'Quantity unit'|trans }}'>
+                {% for case in enum('Elabftw\\Enums\\Units').cases %}
+                  <option value='{{ case.value }}'>{{ case.toHuman() }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <h5><label for='containerMultiplierInput'>{{ 'Total number of containers to distribute'|trans }}</label></h5>
+          <input type='number' value='1' min='1' step='1' id='containerMultiplierInput' autocomplete='off' class='form-control' />
+          <div class='sticky-top bg-white py-2 border-bottom mb-2 mt-2' style='top:0; z-index:1'>
+            <div class='d-flex align-items-center'>
+              <span class='mr-auto'>
+                <span id='containerAssignedCount'>0</span> / <span id='containerTargetCount'>1</span> {{ 'assigned'|trans }}
+              </span>
+              <button type='button' class='btn btn-primary' id='storeContainersBtn' data-action='store-containers-distributed' disabled>{{ 'Store containers'|trans }}</button>
+            </div>
+          </div>
+          <h5 class='mt-2'>{{ 'Distribute containers across the storage locations below'|trans }}</h5>
+          {% include 'storage-list.html' with {'storage_editable': false, 'is_entity': true} %}
+        </div>
+      </div>
+
+      <div class='modal-footer'>
+        <button type='button' class='btn btn-secondary' data-dismiss='modal'>{{ 'Close'|trans }}</button>
+      </div>
+    </div>
+  </div>
+</div>
