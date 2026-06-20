@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>钢筋数字化管理台</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>钢筋数字化管理台</h1>
+        <p id="projectSubtitle">正在加载项目...</p>
+      </div>
+      <button id="refreshButton" type="button">刷新</button>
+    </header>
+
+    <main class="layout">
+      <section class="panel metrics">
+        <div>
+          <span class="label">构件数</span>
+          <strong id="memberCount">0</strong>
+        </div>
+        <div>
+          <span class="label">工作包</span>
+          <strong id="packageCount">0</strong>
+        </div>
+        <div>
+          <span class="label">钢筋总量</span>
+          <strong id="weightTotal">0 kg</strong>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head">
+          <h2>工作包流转</h2>
+          <span id="statusSummary"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>编号</th>
+                <th>类型</th>
+                <th>任务</th>
+                <th>状态</th>
+                <th>负责人</th>
+                <th>下一步</th>
+              </tr>
+            </thead>
+            <tbody id="packageRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel split">
+        <div>
+          <div class="section-head">
+            <h2>构件清单</h2>
+          </div>
+          <div id="memberList" class="list"></div>
+        </div>
+        <div>
+          <div class="section-head">
+            <h2>AI 智能体任务</h2>
+            <button id="loadTasksButton" type="button">加载</button>
+          </div>
+          <div id="agentTasks" class="list"></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
