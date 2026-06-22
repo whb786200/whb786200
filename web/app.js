@@ -1,101 +1,103 @@
 let projectData = null;
 
 const STATUS_LABELS = {
-  draft: "草稿",
-  detailing: "翻样中",
-  checking: "复核中",
-  approved: "已审批",
-  optimized: "已优化",
-  issued_for_fabrication: "已下发加工",
-  fabricated: "已加工",
-  delivered: "已进场",
-  installed: "已安装",
-  inspected: "已验收",
-  closed: "已关闭",
+  draft: "\u8349\u7a3f",
+  detailing: "\u7ffb\u6837\u4e2d",
+  checking: "\u590d\u6838\u4e2d",
+  approved: "\u5df2\u5ba1\u6279",
+  optimized: "\u5df2\u4f18\u5316",
+  issued_for_fabrication: "\u5df2\u4e0b\u53d1\u52a0\u5de5",
+  fabricated: "\u5df2\u52a0\u5de5",
+  delivered: "\u5df2\u8fdb\u573a",
+  installed: "\u5df2\u5b89\u88c5",
+  inspected: "\u5df2\u9a8c\u6536",
+  closed: "\u5df2\u5173\u95ed",
 };
 
 const PACKAGE_TYPE_LABELS = {
-  detailing: "翻样",
-  review: "复核",
-  cutting: "下料优化",
-  procurement: "采购",
-  fabrication: "加工",
-  delivery: "配送",
-  installation: "安装",
-  inspection: "验收",
+  detailing: "\u7ffb\u6837",
+  review: "\u590d\u6838",
+  cutting: "\u4e0b\u6599\u4f18\u5316",
+  procurement: "\u91c7\u8d2d",
+  fabrication: "\u52a0\u5de5",
+  delivery: "\u914d\u9001",
+  installation: "\u5b89\u88c5",
+  inspection: "\u9a8c\u6536",
 };
 
 const MEMBER_TYPE_LABELS = {
-  beam: "梁",
-  slab: "板",
-  column: "柱",
-  wall: "墙",
-  footing: "基础",
-  stair: "楼梯",
-  other: "其他",
+  beam: "\u6881",
+  slab: "\u677f",
+  column: "\u67f1",
+  wall: "\u5899",
+  footing: "\u57fa\u7840",
+  stair: "\u697c\u68af",
+  other: "\u5176\u4ed6",
 };
 
 const ROLE_LABELS = {
-  drawing_parser: "图纸解析智能体",
-  detailing: "翻样智能体",
-  rule_checker: "规则校核智能体",
-  design_optimizer: "设计优化智能体",
-  cutting_optimizer: "下料优化智能体",
-  change_impact: "变更影响智能体",
-  project_manager: "项目管理智能体",
-  cost_controller: "成本控制智能体",
-  field_feedback: "现场反馈智能体",
+  drawing_parser: "\u56fe\u7eb8\u89e3\u6790\u667a\u80fd\u4f53",
+  detailing: "\u7ffb\u6837\u667a\u80fd\u4f53",
+  rule_checker: "\u89c4\u5219\u6821\u6838\u667a\u80fd\u4f53",
+  design_optimizer: "\u8bbe\u8ba1\u4f18\u5316\u667a\u80fd\u4f53",
+  cutting_optimizer: "\u4e0b\u6599\u4f18\u5316\u667a\u80fd\u4f53",
+  change_impact: "\u53d8\u66f4\u5f71\u54cd\u667a\u80fd\u4f53",
+  project_manager: "\u9879\u76ee\u7ba1\u7406\u667a\u80fd\u4f53",
+  cost_controller: "\u6210\u672c\u63a7\u5236\u667a\u80fd\u4f53",
+  field_feedback: "\u73b0\u573a\u53cd\u9988\u667a\u80fd\u4f53",
 };
 
 const OWNER_LABELS = {
-  detailer: "翻样员",
-  "fabrication-planner": "加工计划员",
-  planner: "计划员",
-  system: "系统",
-  dashboard: "管理台",
+  detailer: "\u7ffb\u6837\u5458",
+  "\u7ffb\u6837\u5458": "\u7ffb\u6837\u5458",
+  "fabrication-planner": "\u52a0\u5de5\u8ba1\u5212\u5458",
+  "\u52a0\u5de5\u8ba1\u5212\u5458": "\u52a0\u5de5\u8ba1\u5212\u5458",
+  planner: "\u8ba1\u5212\u5458",
+  system: "\u7cfb\u7edf",
+  dashboard: "\u7ba1\u7406\u53f0",
 };
 
 const OUTPUT_LABELS = {
-  bbs_rows: "翻样明细",
-  quantity_summary: "工程量汇总",
-  assumptions: "计算假设",
-  rule_check_findings: "规则校核问题",
-  required_human_reviews: "需人工复核项",
-  cutting_plan: "下料方案",
-  waste_report: "损耗报告",
-  stock_purchase_advice: "采购建议",
-  daily_brief: "日报简报",
-  risk_register: "风险清单",
-  next_action_list: "下一步行动",
-  impact_report: "变更影响报告",
-  rework_work_packages: "返工工作包",
-  procurement_schedule: "采购计划",
-  cost_delta: "成本差异",
-  approval_flags: "审批提示",
-  handoff_checklist: "交接清单",
-  blocker_list: "阻塞事项",
+  bbs_rows: "\u7ffb\u6837\u660e\u7ec6",
+  quantity_summary: "\u5de5\u7a0b\u91cf\u6c47\u603b",
+  assumptions: "\u8ba1\u7b97\u5047\u8bbe",
+  rule_check_findings: "\u89c4\u5219\u6821\u6838\u95ee\u9898",
+  required_human_reviews: "\u9700\u4eba\u5de5\u590d\u6838\u9879",
+  cutting_plan: "\u4e0b\u6599\u65b9\u6848",
+  waste_report: "\u635f\u8017\u62a5\u544a",
+  stock_purchase_advice: "\u91c7\u8d2d\u5efa\u8bae",
+  daily_brief: "\u65e5\u62a5\u7b80\u62a5",
+  risk_register: "\u98ce\u9669\u6e05\u5355",
+  next_action_list: "\u4e0b\u4e00\u6b65\u884c\u52a8",
+  impact_report: "\u53d8\u66f4\u5f71\u54cd\u62a5\u544a",
+  rework_work_packages: "\u8fd4\u5de5\u5de5\u4f5c\u5305",
+  procurement_schedule: "\u91c7\u8d2d\u8ba1\u5212",
+  cost_delta: "\u6210\u672c\u5dee\u5f02",
+  approval_flags: "\u5ba1\u6279\u63d0\u793a",
+  handoff_checklist: "\u4ea4\u63a5\u6e05\u5355",
+  blocker_list: "\u963b\u585e\u4e8b\u9879",
 };
 
 const TITLE_LABELS = {
-  "Generate and check BBS": "生成并复核钢筋翻样表",
-  "Optimize cutting plan": "优化钢筋下料方案",
-  "Draft BBS for Generate and check BBS": "生成钢筋翻样表初稿",
-  "Check detailing rules for Generate and check BBS": "校核翻样规则",
-  "Optimize cuts for Optimize cutting plan": "优化钢筋下料组合",
-  "Summarize rebar project risks": "汇总钢筋项目风险",
+  "Generate and check BBS": "\u751f\u6210\u5e76\u590d\u6838\u94a2\u7b4b\u7ffb\u6837\u8868",
+  "Optimize cutting plan": "\u4f18\u5316\u94a2\u7b4b\u4e0b\u6599\u65b9\u6848",
+  "Draft BBS for Generate and check BBS": "\u751f\u6210\u94a2\u7b4b\u7ffb\u6837\u8868\u521d\u7a3f",
+  "Check detailing rules for Generate and check BBS": "\u6821\u6838\u7ffb\u6837\u89c4\u5219",
+  "Optimize cuts for Optimize cutting plan": "\u4f18\u5316\u94a2\u7b4b\u4e0b\u6599\u7ec4\u5408",
+  "Summarize rebar project risks": "\u6c47\u603b\u94a2\u7b4b\u9879\u76ee\u98ce\u9669",
 };
 
 const OBJECTIVE_LABELS = {
   "Generate or update bar bending schedule rows from member data.":
-    "根据构件数据生成或更新钢筋翻样明细。",
+    "\u6839\u636e\u6784\u4ef6\u6570\u636e\u751f\u6210\u6216\u66f4\u65b0\u94a2\u7b4b\u7ffb\u6837\u660e\u7ec6\u3002",
   "Check bar lengths, hooks, anchorage placeholders, spacing, and constructability flags.":
-    "检查钢筋长度、弯钩、锚固占位、间距和可施工性风险。",
+    "\u68c0\u67e5\u94a2\u7b4b\u957f\u5ea6\u3001\u5f2f\u94a9\u3001\u951a\u56fa\u5360\u4f4d\u3001\u95f4\u8ddd\u548c\u53ef\u65bd\u5de5\u6027\u98ce\u9669\u3002",
   "Create cutting plans grouped by diameter and propose stock usage improvements.":
-    "按直径生成下料方案，并提出原材使用优化建议。",
+    "\u6309\u76f4\u5f84\u751f\u6210\u4e0b\u6599\u65b9\u6848\uff0c\u5e76\u63d0\u51fa\u539f\u6750\u4f7f\u7528\u4f18\u5316\u5efa\u8bae\u3002",
   "Summarize status, overdue packages, high-risk quantities, and next actions.":
-    "汇总项目状态、逾期工作包、高风险工程量和下一步行动。",
+    "\u6c47\u603b\u9879\u76ee\u72b6\u6001\u3001\u903e\u671f\u5de5\u4f5c\u5305\u3001\u9ad8\u98ce\u9669\u5de5\u7a0b\u91cf\u548c\u4e0b\u4e00\u6b65\u884c\u52a8\u3002",
   "Compare change sets, identify impacted members, and draft rework tasks.":
-    "对比设计变更，识别受影响构件并生成返工任务。",
+    "\u5bf9\u6bd4\u8bbe\u8ba1\u53d8\u66f4\uff0c\u8bc6\u522b\u53d7\u5f71\u54cd\u6784\u4ef6\u5e76\u751f\u6210\u8fd4\u5de5\u4efb\u52a1\u3002",
 };
 
 async function requestJson(url, options) {
@@ -147,11 +149,11 @@ function renderProject(project) {
         select.appendChild(option);
       }
       const button = document.createElement("button");
-      button.textContent = "推进";
+      button.textContent = "\u63a8\u8fdb";
       button.addEventListener("click", () => advancePackage(item.package_id, select.value));
       actionCell.append(select, " ", button);
     } else {
-      actionCell.textContent = "无";
+      actionCell.textContent = "\u65e0";
     }
     rows.appendChild(tr);
   }
@@ -163,8 +165,8 @@ function renderProject(project) {
     div.className = "item";
     div.innerHTML = `
       <h3>${member.member_id} · ${labelMemberName(member.name, member.member_type)}</h3>
-      <p>位置：${member.location.building}/${member.location.level}/${member.location.zone || ""}</p>
-      <p>${member.rebar_marks.length} 个钢筋编号 · ${member.total_weight_kg.toFixed(3)} kg</p>
+      <p>\u4f4d\u7f6e：${member.location.building}/${member.location.level}/${member.location.zone || ""}</p>
+      <p>${member.rebar_marks.length} \u4e2a\u94a2\u7b4b\u7f16\u53f7 · ${member.total_weight_kg.toFixed(3)} kg</p>
     `;
     memberList.appendChild(div);
   }
@@ -194,7 +196,7 @@ async function loadAgentTasks() {
     div.innerHTML = `
       <h3>${labelRole(task.role)} · ${labelTitle(task.title)}</h3>
       <p>${labelObjective(task.objective)}</p>
-      <p>输出：${task.expected_outputs.map(labelOutput).join("、")}</p>
+      <p>\u8f93\u51fa：${task.expected_outputs.map(labelOutput).join("\u3001")}</p>
     `;
     container.appendChild(div);
   }
@@ -233,11 +235,11 @@ function labelMemberName(name, type) {
     return MEMBER_TYPE_LABELS[type] || type;
   }
   return name
-    .replace(/^Beam\b/, "梁")
-    .replace(/^Slab\b/, "板")
-    .replace(/^Column\b/, "柱")
-    .replace(/^Wall\b/, "墙")
-    .replace(/^Footing\b/, "基础");
+    .replace(/^Beam\b/, "\u6881")
+    .replace(/^Slab\b/, "\u677f")
+    .replace(/^Column\b/, "\u67f1")
+    .replace(/^Wall\b/, "\u5899")
+    .replace(/^Footing\b/, "\u57fa\u7840");
 }
 
 document.getElementById("refreshButton").addEventListener("click", loadProject);
