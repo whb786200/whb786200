@@ -23,6 +23,38 @@ D:\ruanjian\微信公众号文章批量下载工具\微信公众号批量下载�
 
 共识别 35 篇 Markdown，按工具主题归类如下。
 
+## 开源AI应用案例库来源
+
+| 项目 | 关键信息 |
+|------|----------|
+| `https://github.com/Shubhamsaboo/awesome-llm-apps` | Apache-2.0 开源 AI 应用案例库，覆盖 100+ AI Agents、RAG、Chat with X、多智能体团队和生成式 UI 案例 |
+| `D:\Codex\projects\数字化\open_source_ai_apps\awesome_llm_apps_index.md` | 本地项目索引，记录仓库定位、许可证、分类、房地产/营销/工程资料可改造方向和下载状态 |
+| `D:\Codex\projects\数字化\open_source_ai_apps\awesome-llm-apps-shallow` | Git 浅克隆尝试目录，已取得提交和文件树清单，但受 GitHub 网络超时影响，完整源码 checkout 未完成 |
+
+后续下载或拉取命令：
+
+```powershell
+git clone --depth 1 https://github.com/Shubhamsaboo/awesome-llm-apps.git
+```
+
+或：
+
+```powershell
+curl.exe -L --retry 5 --retry-delay 5 -o "D:\Codex\projects\数字化\open_source_ai_apps\awesome-llm-apps-main.zip" "https://github.com/Shubhamsaboo/awesome-llm-apps/archive/refs/heads/main.zip"
+Expand-Archive -LiteralPath "D:\Codex\projects\数字化\open_source_ai_apps\awesome-llm-apps-main.zip" -DestinationPath "D:\Codex\projects\数字化\open_source_ai_apps" -Force
+```
+
+优先纳入策划书的案例方向：
+
+| 案例方向 | 对应路径 | 适配场景 |
+|----------|----------|----------|
+| 房地产智能体团队 | `advanced_ai_agents/multi_agent_apps/agent_teams/ai_real_estate_agent_team` | 楼盘问答、项目卖点梳理、客户咨询辅助 |
+| 销售情报团队 | `advanced_ai_agents/multi_agent_apps/agent_teams/ai_sales_intelligence_agent_team` | 销售话术、客户跟进、渠道线索分析 |
+| 竞品情报团队 | `advanced_ai_agents/multi_agent_apps/agent_teams/ai_competitor_intelligence_agent_team` | 竞品活动、价格、卖点和政策信息跟踪 |
+| 数据分析智能体 | `starter_ai_agents/ai_data_analysis_agent` | 日报、渠道、到访、认购、费用等数据分析 |
+| 知识图谱 RAG | `rag_tutorials/knowledge_graph_rag_citations` | 工程资料、制度文件、会议纪要问答并保留引用 |
+| 多模态 RAG | `rag_tutorials/multimodal_agentic_rag` | PDF、图片、图纸、现场照片和文档混合检索问答 |
+
 ### AI策划/PPT与提示词
 
 | 文件 | 提炼能力 |

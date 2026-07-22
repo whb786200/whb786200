@@ -252,6 +252,31 @@ flowchart LR
   H --> B
 ```
 
+### 5.6 开源AI应用案例库
+
+除公众号案例外，营销和工程资料数字化可引入成熟开源 AI 应用作为二次开发起点，避免从零搭建。当前重点纳入 `awesome-llm-apps`：
+
+| 项目 | 地址 | 许可证 | 当前状态 |
+|------|------|--------|----------|
+| awesome-llm-apps | `https://github.com/Shubhamsaboo/awesome-llm-apps` | Apache-2.0 | 已建立本地索引，受 GitHub 网络超时影响，完整源码仍需继续拉取 |
+
+适配方向：
+
+| 案例方向 | 仓库路径 | 落地用途 |
+|----------|----------|----------|
+| 房地产智能体团队 | `advanced_ai_agents/multi_agent_apps/agent_teams/ai_real_estate_agent_team` | 楼盘问答、客户咨询、项目卖点梳理 |
+| 销售情报团队 | `advanced_ai_agents/multi_agent_apps/agent_teams/ai_sales_intelligence_agent_team` | 销售话术、客户分层、渠道线索分析 |
+| 竞品情报团队 | `advanced_ai_agents/multi_agent_apps/agent_teams/ai_competitor_intelligence_agent_team` | 竞品楼盘、价格、活动、卖点自动汇总 |
+| 数据分析智能体 | `starter_ai_agents/ai_data_analysis_agent` | 到访、认购、渠道、费用和日报数据分析 |
+| 知识图谱 RAG | `rag_tutorials/knowledge_graph_rag_citations` | 制度、合同、工程资料问答并保留引用 |
+| 多模态 RAG | `rag_tutorials/multimodal_agentic_rag` | 图纸、照片、PDF、现场图片和资料混合问答 |
+
+本地索引位置：
+
+```text
+D:\Codex\projects\数字化\open_source_ai_apps\awesome_llm_apps_index.md
+```
+
 ## 6. 工程与营销协同
 
 工程管理数字化和营销数字化不能割裂。工程侧沉淀真实进度，营销侧把真实进度转化为可信内容。
@@ -380,6 +405,8 @@ flowchart LR
 | 在线阅读 | `https://github.com/whb786200/whb786200/blob/main/digitalization-plan/README.md` |
 | 营销工具清单 | `https://github.com/whb786200/whb786200/blob/main/digitalization-plan/marketing-toolkit.md` |
 | 案例证据索引 | `https://github.com/whb786200/whb786200/blob/main/digitalization-plan/source-evidence.md` |
+| 开源AI应用案例库 | `https://github.com/Shubhamsaboo/awesome-llm-apps` |
+| awesome-llm-apps 本地索引 | `D:\Codex\projects\数字化\open_source_ai_apps\awesome_llm_apps_index.md` |
 
 如需拉取到本地使用，执行：
 

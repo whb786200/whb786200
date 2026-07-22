@@ -51,6 +51,44 @@ bash ./scripts/fetch-tools.sh
 | 链接追踪 | Shlink | 自托管短链接和访问统计 | MIT |
 | 预约转化 | Cal.com / Cal DIY | 预约排期、线索转预约 | MIT |
 | 工作流自动化 | Huginn | 监控、触发器、自动化代理 | MIT |
+| AI应用案例库 | awesome-llm-apps | 100+ AI Agent、RAG、Chat with X 和多智能体案例，可作为营销/工程资料 AI 应用二次开发起点 | Apache-2.0 |
+
+## 2.1 AI应用案例库：awesome-llm-apps
+
+项目地址：
+
+```text
+https://github.com/Shubhamsaboo/awesome-llm-apps
+```
+
+许可证：Apache-2.0，可商用、可修改、可分发，但需要保留许可证和版权声明。
+
+推荐拉取方式：
+
+```powershell
+git clone --depth 1 https://github.com/Shubhamsaboo/awesome-llm-apps.git
+```
+
+当前本地尝试位置：
+
+```text
+D:\Codex\projects\数字化\open_source_ai_apps\awesome-llm-apps-shallow
+D:\Codex\projects\数字化\open_source_ai_apps\awesome-llm-apps-complete
+D:\Codex\projects\数字化\open_source_ai_apps\awesome-llm-apps-main.zip
+```
+
+当前状态：已取得 Git 提交和 1791 条文件树清单，但 GitHub 大包下载/checkout 多次因网络超时中断，完整源码尚未稳定落盘。后续网络恢复后继续执行上方 clone 命令即可。
+
+优先改造方向：
+
+| 子项目方向 | 仓库路径 | 落地用途 |
+|------------|----------|----------|
+| 房地产智能体团队 | `advanced_ai_agents/multi_agent_apps/agent_teams/ai_real_estate_agent_team` | 项目、房源、客群、竞品和市场问答 |
+| 销售情报团队 | `advanced_ai_agents/multi_agent_apps/agent_teams/ai_sales_intelligence_agent_team` | 销售话术、客户分层、渠道线索分析 |
+| 竞品情报团队 | `advanced_ai_agents/multi_agent_apps/agent_teams/ai_competitor_intelligence_agent_team` | 竞品楼盘、价格、活动、卖点自动汇总 |
+| 数据分析智能体 | `starter_ai_agents/ai_data_analysis_agent` | 到访、转化、渠道、费用和日报数据分析 |
+| 知识图谱 RAG | `rag_tutorials/knowledge_graph_rag_citations` | 制度、合同、工程资料问答并保留引用 |
+| 多模态 RAG | `rag_tutorials/multimodal_agentic_rag` | 图纸、照片、PDF、项目资料混合问答 |
 
 ## 3. 推荐组合
 
@@ -122,4 +160,3 @@ git submodule update --remote digital-marketing-open-source-toolkit/tools/<tool-
 git add .gitmodules digital-marketing-open-source-toolkit/tools/<tool-slug> digital-marketing-open-source-toolkit/tools-lock.json
 git commit -m "Update digital marketing tool submodules"
 ```
-
