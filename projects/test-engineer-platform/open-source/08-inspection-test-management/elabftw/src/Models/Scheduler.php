@@ -1,0 +1,721 @@
+<?php
+
+/**
+ * @author Nicolas CARPi <nico-git@deltablot.email>
+ * @copyright 2012 Nicolas CARPi
+ * @see https://www.elabftw.net Official website
+ * @license AGPL-3.0
+ * @package elabftw
+ */
+
+declare(strict_types=1);
+
+namespace Elabftw\Models;
+
+use DateTime;
+use DateTimeImmutable;
+use Elabftw\Elabftw\EntitySqlBuilder;
+use Elabftw\Enums\Action;
+use Elabftw\Enums\Scope;
+use Elabftw\Exceptions\IllegalActionException;
+use Elabftw\Exceptions\ImproperActionException;
+use Elabftw\Exceptions\UnprocessableContentException;
+use Elabftw\Interfaces\QueryParamsInterface;
+use Elabftw\Models\Notifications\EventDeleted;
+use Elabftw\Models\Users\Users;
+use Elabftw\Services\Filter;
+use Elabftw\Services\TeamsHelper;
+use Elabftw\Traits\EntityTrait;
+use Override;
+use PDO;
+use Throwable;
+
+use function preg_replace;
+use function ksort;
+use function _;
+use function array_filter;
+use function array_key_exists;
+use function array_map;
+use function implode;
+use function sprintf;
+use function str_replace;
+use function trim;
+
+/**
+ * All about the team's scheduler
+ */
+final class Scheduler extends AbstractRest
+{
+    use EntityTrait;
+
+    public const string EVENT_START = '2012-12-31 00:00:00';
+
+    public const string EVENT_END = '2037-12-31 00:00:00';
+
+    private const string DATETIME_FORMAT = 'Y-m-d H:i:s';
+
+    private const int GRACE_PERIOD_MINUTES = 5;
+
+    public Items $Items;
+
+    private string $start = self::EVENT_START;
+
+    private string $end = self::EVENT_END;
+
+    private array $filterSqlParts = array();
+
+    private array $filterBindings = array();
+
+    public function __construct(
+        AbstractEntity $Items,
+        ?int $id = null,
+        ?string $start = null,
+        ?string $end = null,
+    ) {
+        if (!$Items instanceof Items) {
+            throw new ImproperActionException('Scheduler can only work with resources (items).');
+        }
+        $this->Items = $Items;
+        parent::__construct();
+        $this->setId($id);
+        if ($start !== null) {
+            $this->start = $start;
+        }
+        if ($end !== null) {
+            $this->end = $end;
+        }
+    }
+
+    #[Override]
+    public function getApiPath(): string
+    {
+        // We don't use team.php?item= because the id will be the id of the event upon creation
+        return 'api/v2/event/';
+    }
+
+    /**
+     * Add an event for an item in the team
+     * No other action than Create
+     * Date format: 'Y-m-d H:i:s' (self::DATETIME_FORMAT) instead of DateTime::ATOM to comply with MySql format
+     * e.g., 2016-07-22 13:37:00
+     * reqBody :
+     * - ?title
+     * - start
+     * - end
+     */
+    #[Override]
+    public function postAction(Action $action, array $reqBody): int
+    {
+        if ($this->Items->id === null) {
+            throw new ImproperActionException('An item id is needed.');
+        }
+        if (!$this->Items->canBook()) {
+            throw new ImproperActionException(_('You do not have the permission to book this entry.'));
+        }
+        $start = $this->normalizeDate($reqBody['start']);
+        $end = $this->normalizeDate($reqBody['end'], true);
+
+        // users won't be able to create an entry in the past
+        $this->isFutureOrExplode(DateTime::createFromFormat(self::DATETIME_FORMAT, $start));
+
+        // fix booking at midnight on monday not working. See #2765
+        // we add a second so it works
+        $start = str_replace('00:00:00', '00:00:01', $start);
+        // handle constraints during transaction
+        $this->Db->beginTransaction();
+        try {
+            // Serialize concurrent booking attempts for the same resource.
+            $this->lockItemForBooking();
+            $this->checkConstraints($start, $end);
+            $this->checkMaxSlots();
+
+            $sql = 'INSERT INTO team_events(team, item, start, end, userid, title)
+            VALUES(:team, :item, :start, :end, :userid, :title)';
+            $req = $this->Db->prepare($sql);
+            $req->bindParam(':team', $this->Items->Users->userData['team'], PDO::PARAM_INT);
+            $req->bindParam(':item', $this->Items->id, PDO::PARAM_INT);
+            $req->bindParam(':start', $start);
+            $req->bindParam(':end', $end);
+            $req->bindValue(':title', $this->filterTitle($reqBody['title'] ?? ''));
+            $req->bindParam(':userid', $this->Items->Users->userData['userid'], PDO::PARAM_INT);
+            $this->Db->execute($req);
+
+            $eventId = $this->Db->lastInsertId();
+            $this->Db->commit();
+            return $eventId;
+        } catch (Throwable $e) {
+            $this->Db->rollback();
+            throw $e;
+        }
+    }
+
+    /**
+     * Read info from an event id or read the events from an item
+     * The api controller doesn't know what kind of read we want
+     */
+    #[Override]
+    public function readOne(): array
+    {
+        if ($this->id !== null) {
+            return $this->readOneEvent();
+        }
+        return $this->read();
+    }
+
+    /**
+     * Return an array with events for all items of the team
+     */
+    #[Override]
+    public function readAll(?QueryParamsInterface $queryParams = null): array
+    {
+        // prepare filters for the scheduler view
+        if ($queryParams !== null) {
+            $this->appendFilterSql(column: 'items.category', paramName: 'category', value: $queryParams->getQuery()->getInt('category'));
+            $this->appendFilterSql(column: 'team_events.userid', paramName: 'ownerid', value: $queryParams->getQuery()->getInt('eventOwner'));
+            // handle multiple items
+            $itemParams = $queryParams->getQuery()->all('items');
+            $ids = array_filter(array_map('intval', $itemParams)); // force numeric IDs
+            $this->appendItemsIdsToSql($ids);
+        }
+        // apply scope for events
+        $itemParams = $queryParams?->getQuery()->all('items');
+        $itemId = !empty($itemParams) ? (int) $itemParams[0] : 0;
+        $scopeInt = $this->getScope($itemId);
+        if ($scopeInt === Scope::User->value) {
+            $this->appendFilterSql('team_events.userid', 'userid', $this->Items->Users->userData['userid']);
+        } elseif ($scopeInt === Scope::Team->value) {
+            $this->appendFilterSql('team_events.team', 'team', $this->Items->Users->userData['team']);
+        }
+
+        $builder = new EntitySqlBuilder($this->Items);
+        $this->filterSqlParts[] = str_replace('entity.', 'items.', $builder->getCanFilter('canread'));
+        $this->filterBindings['userid'] = $this->Items->Users->userData['userid']; // needed for :userid in builder SQL
+        $this->filterBindings['team'] = $this->Items->Users->userData['team']; // same
+
+        // 'canbook' boolean to display events that user can read but not book
+        $canBookFilter = str_replace('entity.', 'items.', $builder->getCanFilter('canbook'));
+        $canBookExpr = trim(preg_replace('/^\s*AND\s*/', '', $canBookFilter, 1) ?? '');
+        if ($canBookExpr === '') {
+            $canBookExpr = '0';
+        }
+        $boundSelects = $this->getBoundSelects();
+        // the title of the event is title + Firstname Lastname of the user who booked it
+        $sql = sprintf(
+            "SELECT
+                team_events.id,
+                team_events.team,
+                teams.name AS team_name,
+                team_events.title AS title_only,
+                team_events.start,
+                team_events.end,
+                team_events.userid,
+                team_events.created_at,
+                team_events.modified_at,
+                TIMESTAMPDIFF(MINUTE, team_events.start, team_events.end) AS event_duration_minutes,
+                CONCAT(u.firstname, ' ', u.lastname) AS fullname,
+                CONCAT('[', items.title, '] ', team_events.title, ' (', u.firstname, ' ', u.lastname, ')') AS title,
+                items.title AS item_title,
+                items.book_is_cancellable,
+                items.booking_hourly_rate_notax,
+                items.booking_hourly_rate_tax,
+                (items.booking_hourly_rate_notax * TIMESTAMPDIFF(MINUTE, team_events.start, team_events.end)) / 60.0 AS booking_cost_notax,
+                (items.booking_hourly_rate_tax * TIMESTAMPDIFF(MINUTE, team_events.start, team_events.end)) / 60.0 AS booking_cost_tax,
+                COALESCE(NULLIF(CONCAT('#', items_categories.color), '#'), '#0c58ab') AS color,
+                items_categories.title AS items_category_title,
+                %s,
+                items.category AS items_category,
+                items.id AS items_id,
+                %s,
+                CASE WHEN %s THEN 1 ELSE 0 END AS canbook
+            FROM team_events
+            LEFT JOIN teams ON (team_events.team = teams.id)
+            LEFT JOIN experiments ON (team_events.experiment = experiments.id)
+            LEFT JOIN items ON (team_events.item = items.id)
+            LEFT JOIN items AS items_linkt ON (team_events.item_link = items_linkt.id)
+            LEFT JOIN items_categories ON (items.category = items_categories.id)
+            LEFT JOIN users AS u ON (team_events.userid = u.userid)
+            LEFT JOIN users2teams ON (users2teams.users_id = items.userid AND users2teams.teams_id = :team)
+            WHERE 1 = 1
+                AND team_events.start <= :end
+                AND team_events.end >= :start
+                %s",
+            $boundSelects['experiment'],
+            $boundSelects['item_link'],
+            $canBookExpr,
+            implode(' ', $this->filterSqlParts)
+        );
+        $req = $this->Db->prepare($sql);
+        $req->bindValue(':start', $this->normalizeDate($this->start));
+        $req->bindValue(':end', $this->normalizeDate($this->end, true));
+        foreach ($this->filterBindings as $param => $value) {
+            $req->bindValue(":$param", $value, PDO::PARAM_INT);
+        }
+        $this->Db->execute($req);
+        return $req->fetchAll();
+    }
+
+    #[Override]
+    public function patch(Action $action, array $params): array
+    {
+        $this->canWriteOrExplode();
+        match ($params['target']) {
+            'experiment' => $this->bind('experiment', $params['id']),
+            'item_link' => $this->bind('item_link', $params['id']),
+            'title', 'datetime' => $this->update($params),
+            default => throw new ImproperActionException('Incorrect target parameter.'),
+        };
+        return $this->readOne();
+    }
+
+    /**
+     * Remove an event
+     */
+    #[Override]
+    public function destroy(): bool
+    {
+        $this->canWriteOrExplode();
+        $event = $this->readOne();
+        $createdAt = new DateTimeImmutable($event['created_at']);
+        $start = new DateTimeImmutable($event['start']);
+        $this->isEditableOrExplode($createdAt, $start);
+
+        if ($event['book_is_cancellable'] === 0 && !$this->Items->Users->isAdmin) {
+            throw new ImproperActionException(_('Event cancellation is not permitted.'));
+        }
+        if ($event['book_cancel_minutes'] !== 0 && !$this->Items->Users->isAdmin) {
+            $now = new DateTimeImmutable();
+            $eventStart = new DateTimeImmutable($event['start']);
+            $interval = $now->diff($eventStart);
+            $totalMinutes = ($interval->h * 60) + $interval->i;
+            if ($totalMinutes < $event['book_cancel_minutes']) {
+                throw new ImproperActionException(sprintf(_('Cannot cancel slot less than %d minutes before its start.'), $event['book_cancel_minutes']));
+            }
+        }
+        $sql = 'DELETE FROM team_events WHERE id = :id';
+        $req = $this->Db->prepare($sql);
+        $req->bindParam(':id', $this->id, PDO::PARAM_INT);
+
+        // send a notification to all team admins
+        $TeamsHelper = new TeamsHelper($this->Items->Users->userData['team']);
+        $admins = $TeamsHelper->getAllAdminsUserid();
+        foreach ($admins as $adminId) {
+            if ($adminId === $this->Items->Users->userData['userid']) {
+                continue;
+            }
+            $adminUser = new Users($adminId);
+            $Notif = new EventDeleted($adminUser, $event, $this->Items->Users->userData['fullname']);
+            $Notif->create();
+        }
+        return $this->Db->execute($req);
+    }
+
+    /** Lock the resource row to serialize concurrent booking creation for the same item. */
+    private function lockItemForBooking(): void
+    {
+        $sql = 'SELECT id FROM items WHERE id = :item FOR UPDATE';
+        $req = $this->Db->prepare($sql);
+        $req->bindParam(':item', $this->Items->id, PDO::PARAM_INT);
+        $this->Db->execute($req);
+        if ($req->fetchColumn() === false) {
+            throw new ImproperActionException('Could not lock item for booking.');
+        }
+    }
+
+    private function update(array $params): void
+    {
+        $updates = array();
+        $bindings = array();
+        $this->updateTitle($params, $updates, $bindings);
+        $this->updateDateTime($params, $updates, $bindings);
+        if (empty($updates)) {
+            return; // nothing to update
+        }
+        $sql = 'UPDATE team_events SET ' . implode(', ', $updates) . ' WHERE team = :team AND id = :id';
+        $req = $this->Db->prepare($sql);
+        foreach ($bindings as $key => $value) {
+            $req->bindValue($key, $value);
+        }
+        $req->bindParam(':team', $this->Items->Users->userData['team'], PDO::PARAM_INT);
+        $req->bindParam(':id', $this->id, PDO::PARAM_INT);
+        $this->Db->execute($req);
+    }
+
+    private function updateTitle(array $params, array &$updates, array &$bindings): void
+    {
+        if (array_key_exists('title', $params)) {
+            $updates[] = 'title = :title';
+            $bindings[':title'] = $this->filterTitle((string) $params['title']);
+        }
+    }
+
+    private function updateDateTime(array $params, array &$updates, array &$bindings): void
+    {
+        if (array_key_exists('start', $params) || array_key_exists('end', $params)) {
+            if (!isset($params['start'], $params['end'])) {
+                throw new ImproperActionException('Start and end must both be provided.');
+            }
+            $start = $this->normalizeDate($params['start']);
+            $end = $this->normalizeDate($params['end'], true);
+            $this->isFutureOrExplode(new DateTimeImmutable($start));
+            $this->isFutureOrExplode(new DateTimeImmutable($end));
+            $this->checkConstraints($start, $end);
+            $updates[] = 'start = :start';
+            $updates[] = 'end = :end';
+            $bindings[':start'] = $start;
+            $bindings[':end'] = $end;
+        }
+    }
+
+    private function appendItemsIdsToSql(array $itemsIds): void
+    {
+        if (empty($itemsIds)) {
+            return;
+        }
+        $placeholders = array();
+        foreach ($itemsIds as $index => $id) {
+            $key = "itemid$index";
+            $placeholders[] = ":$key";
+            $this->filterBindings[$key] = $id;
+        }
+        $this->filterSqlParts[] = 'AND items.id IN (' . implode(',', $placeholders) . ')';
+    }
+
+    private function getScope(int $queryParamsItem): int
+    {
+        // if there is an item selected, we force the events scope to everything
+        if ($queryParamsItem > 0) {
+            return Scope::Everything->value;
+        }
+        return $this->Items->Users->userData['scope_events'] ?? Scope::Everything->value;
+    }
+
+    /**
+     * Return an array with events for this item
+     */
+    private function read(): array
+    {
+        // the title of the event is title + Firstname Lastname of the user who booked it
+        // the color is used by fullcalendar for the bg color of the event
+        $boundSelects = $this->getBoundSelects();
+        $sql = sprintf(
+            "SELECT team_events.*,
+            CONCAT(team_events.title, ' (', u.firstname, ' ', u.lastname, ')') AS title,
+            team_events.title AS title_only,
+            COALESCE(NULLIF(CONCAT('#', items_categories.color), '#'), '#0c58ab') AS color,
+            %s, %s,
+            items.title AS item_title,
+            items.book_is_cancellable
+            FROM team_events
+            LEFT JOIN items ON (team_events.item = items.id)
+            LEFT JOIN items AS items_linkt ON (team_events.item_link = items_linkt.id)
+            LEFT JOIN experiments ON (experiments.id = team_events.experiment)
+            LEFT JOIN items_categories ON (items.category = items_categories.id)
+            LEFT JOIN users AS u ON team_events.userid = u.userid
+            LEFT JOIN users2teams ON (users2teams.users_id = :userid AND users2teams.teams_id = team_events.team)
+            WHERE team_events.item = :item
+                AND team_events.start <= :end
+                AND team_events.end >= :start",
+            $boundSelects['experiment'],
+            $boundSelects['item_link'],
+        );
+
+        $req = $this->Db->prepare($sql);
+        $req->bindParam(':item', $this->Items->id, PDO::PARAM_INT);
+        $req->bindValue(':start', $this->normalizeDate($this->start));
+        $req->bindValue(':end', $this->normalizeDate($this->end, true));
+        $req->bindValue(':userid', $this->Items->Users->userData['userid'], PDO::PARAM_INT);
+        $this->Db->execute($req);
+
+        return $req->fetchAll();
+    }
+
+    // the title (comment) can be an empty string
+    private function filterTitle(string $title): string
+    {
+        $filteredTitle = '';
+        if (!empty($title)) {
+            $filteredTitle = Filter::title($title);
+        }
+        return $filteredTitle;
+    }
+
+    private function readOneEvent(): array
+    {
+        $boundSelects = $this->getBoundSelects();
+        $sql = sprintf(
+            'SELECT
+                team_events.id,
+                team_events.team,
+                team_events.item,
+                team_events.start,
+                team_events.end,
+                team_events.title,
+                team_events.userid,
+                team_events.experiment,
+                team_events.item_link,
+                team_events.created_at,
+                team_events.modified_at,
+                items.book_is_cancellable,
+                items.book_cancel_minutes,
+                team_events.title AS title_only,
+                %s, %s
+            FROM team_events
+            LEFT JOIN items ON (team_events.item = items.id)
+            LEFT JOIN experiments ON (experiments.id = team_events.experiment)
+            LEFT JOIN items AS items_linkt ON (team_events.item_link = items_linkt.id)
+            LEFT JOIN users2teams ON (users2teams.users_id = :userid AND users2teams.teams_id = team_events.team)
+            WHERE team_events.id = :id',
+            $boundSelects['experiment'],
+            $boundSelects['item_link'],
+        );
+        $req = $this->Db->prepare($sql);
+        $req->bindParam(':id', $this->id, PDO::PARAM_INT);
+        $req->bindValue(':userid', $this->Items->Users->userData['userid'], PDO::PARAM_INT);
+        $this->Db->execute($req);
+
+        $event = $this->Db->fetch($req);
+        $this->Items->setId($event['item']);
+        ksort($event);
+        return $event;
+    }
+
+    /**
+     * Bind an entity to a calendar event
+     * Note: the column is set here, not taken from request
+     * and the entityId can only be int so no need to validate it
+     */
+    private function bind(string $column, ?int $entityid = null): bool
+    {
+        $sql = 'UPDATE team_events SET ' . $column . ' = :entity WHERE id = :id';
+        $req = $this->Db->prepare($sql);
+        $req->bindParam(':entity', $entityid, PDO::PARAM_INT);
+        $req->bindParam(':id', $this->id, PDO::PARAM_INT);
+        return $this->Db->execute($req);
+    }
+
+    private function checkSlotTime(string $start, string $end): void
+    {
+        if ($this->Items->entityData['book_max_minutes'] === 0) {
+            return;
+        }
+        $start = new DateTimeImmutable($start);
+        $end = new DateTimeImmutable($end);
+        $interval = $start->diff($end);
+        $totalMinutes = ($interval->days * 24 * 60) + ($interval->h * 60) + $interval->i;
+        if ($totalMinutes > $this->Items->entityData['book_max_minutes']) {
+            throw new ImproperActionException(sprintf(_('Each time slot is limited to %d minutes.'), $this->Items->entityData['book_max_minutes']));
+        }
+    }
+
+    private function checkMaxSlots(): void
+    {
+        if ($this->Items->entityData['book_max_slots'] === 0) {
+            return;
+        }
+        $sql = 'SELECT count(id) FROM team_events WHERE start > NOW() AND item = :item AND userid = :userid';
+        $req = $this->Db->prepare($sql);
+        $req->bindParam(':item', $this->Items->id, PDO::PARAM_INT);
+        $req->bindParam(':userid', $this->Items->Users->userData['userid'], PDO::PARAM_INT);
+        $this->Db->execute($req);
+        $count = $req->fetchColumn();
+        if ($count >= $this->Items->entityData['book_max_slots']) {
+            throw new ImproperActionException(
+                sprintf(_('You cannot book any more slots. Maximum of %d reached.'), $this->Items->entityData['book_max_slots'])
+            );
+        }
+    }
+
+    private function checkConstraints(string $start, string $end): void
+    {
+        $this->checkOverlap($start, $end);
+        $this->checkSlotTime($start, $end);
+        $this->checkEndAfterStart($start, $end);
+        $this->checkBookingWindow($start);
+    }
+
+    private function formatDate(string $input): DateTimeImmutable
+    {
+        $date = DateTimeImmutable::createFromFormat(self::DATETIME_FORMAT, $input);
+        if ($date === false) {
+            throw new ImproperActionException('Could not understand date format!');
+        }
+        return $date;
+    }
+
+    private function checkEndAfterStart(string $start, string $end): void
+    {
+        $startDate = $this->formatDate($start);
+        $endDate = $this->formatDate($end);
+        if ($endDate < $startDate) {
+            throw new UnprocessableContentException(sprintf(
+                _('End time %s cannot be before start time %s.'),
+                $endDate->format(self::DATETIME_FORMAT),
+                $startDate->format(self::DATETIME_FORMAT)
+            ));
+        }
+    }
+
+    private function checkBookingWindow(string $start): void
+    {
+        $maxDays = (int) ($this->Items->entityData['booking_window_days'] ?? 0);
+        if ($maxDays <= 0) {
+            return;
+        }
+        $startDate = $this->formatDate($start);
+        $now = new DateTimeImmutable();
+        $maxAllowed = $now->modify(sprintf('+%d days', $maxDays))->setTime(23, 59, 59);
+        if ($startDate > $maxAllowed) {
+            throw new ImproperActionException(sprintf(_('Booking is limited to %d day(s) in advance.'), $maxDays));
+        }
+    }
+
+    /**
+     * Look if another slot is present for the same item at the same time and throw exception if yes
+     */
+    private function checkOverlap(string $start, string $end): void
+    {
+        if ($this->Items->entityData['book_can_overlap'] === 1) {
+            return;
+        }
+        $sql = 'SELECT id FROM team_events WHERE :start < end AND :end > start AND item = :item';
+        if ($this->id !== null) {
+            $sql .= ' AND id != :id';
+        }
+        $req = $this->Db->prepare($sql);
+        $req->bindParam(':start', $start);
+        $req->bindParam(':end', $end);
+        $req->bindParam(':item', $this->Items->id, PDO::PARAM_INT);
+        if ($this->id !== null) {
+            $req->bindParam(':id', $this->id, PDO::PARAM_INT);
+        }
+        $this->Db->execute($req);
+        if (!empty($req->fetchAll())) {
+            throw new ImproperActionException(_('Overlapping booking slots is not permitted.'));
+        }
+    }
+
+    /**
+     * Check that the date is in the future
+     * Unlike Admins, Users can't create/modify something in the past, unless book_users_can_in_past is truthy
+     * Input can be false because DateTime::createFromFormat will return false on failure
+     */
+    private function isFutureOrExplode(DateTime|DateTimeImmutable|false $date): void
+    {
+        if ($this->Items->canBookInPast()) {
+            return;
+        }
+        if ($date === false) {
+            throw new ImproperActionException('Could not understand date format!');
+        }
+        $now = new DateTime();
+        if ($now > $date) {
+            throw new ImproperActionException(_('Creation/modification of events in the past is not allowed!'));
+        }
+    }
+
+    /**
+     * Check that the item has been created in the last minutes (GRACE_PERIOD_MINUTES)
+     * Users can't delete events in the past (see #5596) unless in this span of time.
+     */
+    private function isInGracePeriod(DateTimeImmutable $createdAt): bool
+    {
+        $now = new DateTimeImmutable();
+        $gracePeriodEnd = $createdAt->modify(sprintf('+%d minutes', self::GRACE_PERIOD_MINUTES));
+        return $now <= $gracePeriodEnd;
+    }
+
+    private function isEditableOrExplode(DateTimeImmutable $createdAt, DateTimeImmutable $startDate): void
+    {
+        if ($this->Items->Users->isAdmin) {
+            return;
+        }
+        if ($this->isInGracePeriod($createdAt)) {
+            return;
+        }
+        $this->isFutureOrExplode($startDate);
+    }
+
+    // Date can be DateTime::ATOM, 'Y-m-d H:i:s' (MySQL DATETIME), or 'Y-m-d' (date-only)
+    private function normalizeDate(string $date, bool $rmDay = false): string
+    {
+        // Try ISO 8601
+        $dt = DateTimeImmutable::createFromFormat(DateTime::ATOM, $date);
+        // fallback: MySQL style DATETIME
+        if ($dt === false) {
+            $dt = DateTimeImmutable::createFromFormat(self::DATETIME_FORMAT, $date);
+        }
+        // fallback: date-only
+        if ($dt === false) {
+            $dt = DateTimeImmutable::createFromFormat('Y-m-d', $date);
+            if ($dt === false) {
+                throw new ImproperActionException('Could not understand date format!');
+            }
+            $dt = $dt->setTime(0, 1);
+            // we don't want the end date to go over one day
+            if ($rmDay) {
+                $dt = $dt->modify('-3 minutes');
+            }
+        }
+        return $dt->format(self::DATETIME_FORMAT);
+    }
+
+    /**
+     * Check if current logged in user can edit an event
+     * Only admins can edit events from someone else
+     */
+    private function canWrite(): bool
+    {
+        $event = $this->readOne();
+        // if it's our event (and it's not in the past) we can write to it for sure
+        if ($event['userid'] === $this->Items->Users->userData['userid']) {
+            return true;
+        }
+
+        // if it's not, we need to be admin in the same team as the event/user
+        $TeamsHelper = new TeamsHelper($event['team']);
+        return $TeamsHelper->isAdminInTeam($this->Items->Users->userData['userid']);
+    }
+
+    private function canWriteOrExplode(): void
+    {
+        if ($this->canWrite() === false) {
+            throw new IllegalActionException();
+        }
+    }
+
+    private function appendFilterSql(string $column, string $paramName, int $value): void
+    {
+        if ($value <= 0 || isset($this->filterBindings[$paramName])) {
+            return;
+        }
+        $this->filterSqlParts[] = sprintf('AND %s = :%s', $column, $paramName);
+        $this->filterBindings[$paramName] = $value;
+    }
+
+    /**
+     * Bound entities have their own read permissions, independent from the scheduler event.
+     * The event itself can be visible to the user, but the linked experiment/item may still be private.
+     * Only expose the bound entity id and title when the current user can read that entity.
+     */
+    private function getBoundSelect(AbstractEntity $entity, string $table, string $idColumn, string $idField, string $titleField): string
+    {
+        $builder = new EntitySqlBuilder($entity);
+        $canRead = str_replace('entity.', $table . '.', $builder->getCanFilter('canread'));
+        return sprintf(
+            'CASE WHEN %1$s.id IS NOT NULL %2$s THEN %3$s ELSE NULL END AS %4$s, CASE WHEN %1$s.id IS NOT NULL %2$s THEN %1$s.title ELSE NULL END AS %5$s',
+            $table,
+            $canRead,
+            $idColumn,
+            $idField,
+            $titleField
+        );
+    }
+
+    private function getBoundSelects(): array
+    {
+        return array(
+            'experiment' => $this->getBoundSelect(new Experiments($this->Items->Users), 'experiments', 'team_events.experiment', 'experiment', 'experiment_title'),
+            'item_link' => $this->getBoundSelect($this->Items, 'items_linkt', 'team_events.item_link', 'item_link', 'item_link_title'),
+        );
+    }
+}

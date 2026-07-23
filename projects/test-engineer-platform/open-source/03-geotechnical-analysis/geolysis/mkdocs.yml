@@ -1,0 +1,118 @@
+site_name: geolysis
+site_description: >-
+  geolysis is an open-source python package (library) for geotechnical 
+  analysis and modeling
+site_author: Patrick Boateng
+site_url: !ENV READTHEDOCS_CANONICAL_URL
+copyright: Copyright &copy; 2023 - 2025 Geolysis
+repo_name: geolysis
+repo_url: https://github.com/patrickboateng/geolysis/
+edit_uri: edit/main/docs
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  logo: assets/pkg-logo.svg
+  favicon: assets/favicon.ico
+
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - content.action.edit
+    - content.code.annotate
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+    - navigation.footer
+    - navigation.indexes
+    - toc.follow
+
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [ "." ]
+          options:
+            preload_modules: [ "geolysis" ]
+            docstring_style: sphinx
+            show_source: false
+            show_signature: true
+            members_order: source
+            merge_init_into_class: true
+            docstring_section_style: spacy
+            show_root_heading: false
+            show_root_toc_entry: false
+            unwrap_annotated: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            inherited_members: true
+            filters:
+              - "!^_"
+  - search
+  - git-revision-date-localized:
+      enable_creation_date: true
+      enable_git_follow: false
+  - git-committers:
+      repository: patrickboateng/geolysis
+      branch: main
+  - awesome-nav
+
+  - gen-files:
+      scripts:
+        - scripts/docs/gen_api_docs.py
+        - scripts/docs/gen_excel_func_docs.py
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      pygments_lang_class: true
+  - pymdownx.arithmatex:
+      generic: true
+  - tables
+
+extra:
+  social:
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/geolysis
+    - icon: fontawesome/brands/github
+      link: https://github.com/patrickboateng/geolysis
+    - icon: fontawesome/brands/linkedin
+      link: https://linkedin.com/company/geolysis-llc
+    - icon: fontawesome/solid/envelope
+      link: mailto:support@geolysis.io
+
+extra_javascript:
+  - javascript/katex.js
+  - javascript/readthedocs.js
+  - https://unpkg.com/katex@0/dist/katex.min.js
+  - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
+
+extra_css:
+  - https://unpkg.com/katex@0/dist/katex.min.css

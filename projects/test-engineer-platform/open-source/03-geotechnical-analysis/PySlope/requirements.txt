@@ -1,0 +1,12 @@
+colour
+plotly
+tqdm
+gunicorn
+django
+whitenoise
+dj-database-url
+psycopg2-binary
+kaleido
+pytest
+pytest-cov
+numpy

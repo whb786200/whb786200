@@ -1,0 +1,83 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Distribution
+*.tar.gz
+*.zip
+
+# Legacy root-level modules (superseded by boxcrete/ package)
+/models.py
+/utils.py
+/input_transform.py
+/doodles.py
+/posterior_mean_pareto.py
+
+# Notebook-generated output files
+ConcreteFormulae.csv
+ConcreteFormula_*.png
+GWPvsStrength.png
+
+# Planning files
+*.plan.md
+
+# Local `make test-notebooks` output (executed copies of notebooks).
+.notebook-runs/
+
+# E2E / Playwright / Lighthouse CI
+node_modules/
+playwright-report/
+test-results/
+.lighthouseci/
+blob-report/
+playwright/.cache/

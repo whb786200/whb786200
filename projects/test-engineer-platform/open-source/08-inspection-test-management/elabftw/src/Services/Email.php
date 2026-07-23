@@ -1,0 +1,326 @@
+<?php
+
+/**
+ * @author Nicolas CARPi <nico-git@deltablot.email>
+ * @copyright 2012 Nicolas CARPi
+ * @see https://www.elabftw.net Official website
+ * @license AGPL-3.0
+ * @package elabftw
+ */
+
+declare(strict_types=1);
+
+namespace Elabftw\Services;
+
+use Elabftw\Elabftw\Db;
+use Elabftw\Elabftw\Env;
+use Elabftw\Elabftw\SchemaVersionChecker;
+use Elabftw\Enums\EmailTarget;
+use Elabftw\Exceptions\ImproperActionException;
+use Elabftw\Exceptions\InvalidSchemaException;
+use Elabftw\Models\AbstractEntity;
+use Elabftw\Models\Users\Users;
+use PDO;
+use Psr\Log\LoggerInterface;
+use Stevebauman\Hypertext\Transformer;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Email as Memail;
+use Symfony\Component\Mime\RawMessage;
+
+use function count;
+use function _;
+use function array_column;
+use function array_map;
+use function preg_replace;
+use function sprintf;
+
+/**
+ * Email service
+ * @final mocked in tests
+ */
+class Email
+{
+    public string $footer;
+
+    private Address $from;
+
+    // this is used to keep track that there is no need to keep trying to send emails
+    // for example: notifications:send will call multiple time the send() method, and we want to error out only once
+    private bool $stopTrying = false;
+
+    public function __construct(
+        private readonly SchemaVersionChecker $schemaVersionChecker,
+        private readonly MailerInterface $Mailer,
+        private readonly LoggerInterface $Log,
+        private readonly string $mailFrom,
+        private readonly bool $demoMode = false,
+    ) {
+        $this->footer = $this->makeFooter();
+        $this->from = new Address($mailFrom, 'eLabFTW');
+    }
+
+    public function notifyBookers(Users $requester, string $subject, string $content, AbstractEntity $entity): int
+    {
+        $bookers = $entity->readOne()['surrounding_bookers'];
+        $addresses = array_map(fn($row) => new Address($row['email'], $row['fullname']), $bookers);
+        if (!$addresses) {
+            return 0;
+        }
+        $replyTo = new Address($requester->userData['email'], $requester->userData['fullname']);
+        return $this->sendInLoop($addresses, $subject, $content, $replyTo);
+    }
+
+    /**
+     * Send an email
+     */
+    public function send(RawMessage $email): bool
+    {
+        if ($this->stopTrying) {
+            return false;
+        }
+        // this will throw an InvalidSchemaException if schema isn't good
+        try {
+            $this->schemaVersionChecker->checkSchema();
+        } catch (InvalidSchemaException) {
+            $this->stopTrying = true;
+            $this->Log->error('', array('Error' => 'Database schema needs an update. Cancelling sending emails. Fix this error with: bin/console db:update.'));
+            return false;
+        }
+
+        if ($this->mailFrom === 'notconfigured@example.com') {
+            $this->stopTrying = true;
+            // we don't want to throw an exception here, just fail but log an error
+            $this->Log->warning('', array('Warning' => 'Cannot send email: sender email address is not configured.'));
+            return false;
+        }
+        // completely disable sending emails in demo mode
+        if ($this->demoMode) {
+            $this->stopTrying = true;
+            return false;
+        }
+        try {
+            $this->Mailer->send($email);
+        } catch (TransportExceptionInterface $e) {
+            // for email error, don't display error to user as it might contain sensitive information
+            // but log it and display general error. See #841
+            $this->Log->error('', array('exception' => $e));
+            throw new ImproperActionException('Could not send email! Full error message has been logged.');
+        }
+        return true;
+    }
+
+    /**
+     * Send a test email
+     */
+    public function testemailSend(string $email): int
+    {
+        $message = (new Memail())
+        ->subject('[eLabFTW] ' . _('Test email'))
+        ->from($this->from)
+        ->to(new Address($email, 'Admin eLabFTW'))
+        ->text('Congratulations, you correctly configured eLabFTW to send emails! :)' . $this->footer);
+
+        return $this->send($message) ? 1 : 0;
+    }
+
+    /**
+     * Send a mass email to all users
+     */
+    public function massEmail(EmailTarget $target, ?int $targetId, string $subject, string $body, Address $replyTo, bool $sendGrouped): int
+    {
+        if (empty($subject)) {
+            $subject = '[eLabFTW] No subject';
+        }
+
+        // get all email addresses
+        $addresses = self::getAllEmailAddresses($target, $targetId);
+        $addressesCount = count($addresses);
+
+        $sender = sprintf("\n\nEmail sent by %s. You can reply directly to this email.\n", $replyTo->getName());
+
+        $content = $body . $sender . $this->footer;
+
+        if ($sendGrouped) {
+            // send one single email to everyone
+            $message = (new Memail())
+            ->subject($subject)
+            ->from($this->from)
+            ->to($replyTo)
+            // set recipients in BCC to hide email addresses
+            ->bcc(...$addresses)
+            ->replyTo($replyTo)
+            ->text($content);
+
+            return $this->send($message) ? $addressesCount : 0;
+        }
+
+        // send emails one by one
+        return $this->sendInLoop($addresses, $subject, $content, $replyTo);
+    }
+
+    /**
+     * @param null|(\Symfony\Component\Mime\Address|string)[] $cc
+     */
+    public function sendEmail(
+        Address $to,
+        string $subject,
+        string $body,
+        ?array $cc = null,
+        ?string $htmlBody = null,
+        ?Address $replyTo = null,
+    ): bool {
+        $message = (new Memail())
+        ->subject($subject)
+        ->from($this->from)
+        ->to($to)
+        ->text($body);
+
+        if (!empty($cc)) {
+            $message->cc(...$cc);
+        }
+
+        if ($replyTo !== null) {
+            $message->addReplyTo($replyTo);
+        }
+
+        if (!empty($htmlBody)) {
+            $message->html($htmlBody);
+
+            if (empty($body)) {
+                $textWithLinks = (new Transformer())
+                    ->keepLinks()
+                    ->keepNewLines()
+                    ->toText($htmlBody);
+                // convert links to plain text and keep the url
+                // <a href="url">link text</a> => link text (url)
+                $plainText = preg_replace('/<a href="([^"]*)">([^<]*)<\/a>/iu', '$2 ($1)', $textWithLinks);
+
+                $message->text($plainText);
+            }
+        }
+
+        return $this->send($message);
+    }
+
+    public function notifySysadminsTsBalance(int $tsBalance): bool
+    {
+        $emails = self::getAllEmailAddresses(EmailTarget::Sysadmins);
+        $subject = '[eLabFTW] Warning: timestamp balance low!';
+        $body = sprintf('Warning: the number of timestamps left is low! %d timestamps left.', $tsBalance);
+        $message = (new Memail())
+            ->subject($subject)
+            ->from($this->from)
+            ->to(...$emails)
+            ->text($body . $this->footer);
+        return $this->send($message);
+    }
+
+    /**
+     * Get ids of all active users on instance, in team or teamgroup
+     * @return int[]
+     */
+    public static function getIdsOfRecipients(EmailTarget $target, ?int $targetId = null, ?array $range = null): array
+    {
+        return array_column(self::getAllEmailAddressesRawData($target, $targetId, $range), 'userid');
+    }
+
+    /**
+     * Get email addresses of all active users on instance, in team or teamgroup
+     * @return Address[]
+     */
+    public static function getAllEmailAddresses(EmailTarget $target, ?int $targetId = null): array
+    {
+        $emails = array();
+        foreach (self::getAllEmailAddressesRawData($target, $targetId) as $user) {
+            $emails[] = new Address($user['email'], $user['fullname']);
+        }
+        return $emails;
+    }
+
+    private function sendInLoop(array $addresses, string $subject, string $content, Address $replyTo): int
+    {
+        $subject = Filter::toPureString($subject);
+        $content = Filter::toPureString($content);
+        // send emails one by one
+        $sentCount = 0;
+        foreach ($addresses as $address) {
+            // use a try catch so we finish the loop even if errors are encountered
+            try {
+                if ($this->sendEmail($address, $subject, $content, replyTo: $replyTo)) {
+                    $sentCount++;
+                    continue;
+                }
+                // send() returned false because sending is disabled for this Email instance
+                break;
+                // this will be thrown by send() method
+            } catch (ImproperActionException) {
+                continue;
+            }
+        }
+        return $sentCount;
+    }
+
+    private function makeFooter(): string
+    {
+        return sprintf("\n\n~~~\n%s %s\n", _('Sent from eLabFTW'), Env::asUrl('SITE_URL'));
+    }
+
+    private static function getAllEmailAddressesRawData(EmailTarget $target, ?int $targetId = null, ?array $range = null): array
+    {
+        $select = 'SELECT DISTINCT users.userid, email, CONCAT(firstname, " ", lastname) AS fullname FROM users
+            INNER JOIN users2teams ON (users2teams.users_id = users.userid AND users2teams.is_archived = 0)
+            LEFT JOIN users2team_groups ON (users2team_groups.userid = users.userid)
+            LEFT JOIN team_events ON (team_events.userid = users.userid)';
+        switch ($target) {
+            case EmailTarget::Team:
+                $filter = 'AND users2teams.teams_id = :id';
+                break;
+            case EmailTarget::TeamGroup:
+                $filter = 'AND users2team_groups.groupid = :id';
+                break;
+            case EmailTarget::Admins:
+                $filter = 'AND users2teams.is_admin = 1';
+                break;
+            case EmailTarget::AdminsOfTeam:
+                $filter = 'AND users2teams.is_admin = 1 AND users2teams.teams_id = :id';
+                break;
+            case EmailTarget::Sysadmins:
+                $filter = 'AND users.is_sysadmin = 1';
+                break;
+                // legacy (past & future users who booked this item)
+            case EmailTarget::BookableItem:
+                $filter = 'AND team_events.start BETWEEN NOW() - INTERVAL 2 MONTH AND NOW() + INTERVAL 1 MONTH AND team_events.item = :id';
+                break;
+            case EmailTarget::BookableItemRange:
+                $value = (int) ($range['value'] ?? 7);
+                $map = array('days' => 'DAY', 'month' => 'MONTH', 'years' => 'YEAR');
+                $unit = $map[$range['unit'] ?? 'days'] ?? 'DAY';
+                $direction = $range['direction'] ?? 'past';
+                $start = 'NOW()';
+                $end = 'NOW()';
+                if ($direction !== 'future') {
+                    $start = "DATE_SUB(NOW(), INTERVAL $value $unit)";
+                }
+                if ($direction !== 'past') {
+                    $end = "DATE_ADD(NOW(), INTERVAL $value $unit)";
+                }
+                $filter = "AND team_events.start BETWEEN $start AND $end
+                AND team_events.item = :id";
+                break;
+            default:
+                $filter = '';
+        }
+        $where = 'WHERE users.validated = 1';
+        $sql = sprintf('%s %s %s', $select, $where, $filter);
+        $Db = Db::getConnection();
+        $req = $Db->prepare($sql);
+        if ($target->needsId()) {
+            $req->bindParam(':id', $targetId, PDO::PARAM_INT);
+        }
+        $Db->execute($req);
+
+        return $req->fetchAll();
+    }
+}

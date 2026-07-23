@@ -1,0 +1,241 @@
+# GitHub Actions workflow for executing Jupyter notebooks
+# Runs on pull requests and nightly to ensure notebooks work correctly
+
+name: Notebooks
+
+# Cancel obsolete runs on rapid pushes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [main, master]
+    paths: &notebook_paths
+      - 'notebooks/**'
+      - 'boxcrete/**'
+      - 'pyproject.toml'
+      - '.github/workflows/notebooks.yml'
+  pull_request:
+    branches: [main, master]
+    paths: *notebook_paths
+  schedule:
+    # Run nightly at 3:00 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Notebooks that use BOXCRETE_OPTIMIZATION_MODE run in both mortar and concrete modes
+  mode-dependent-notebooks:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        optimization-mode: ['mortar', 'concrete']
+        include-cost: ['false', 'true']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-3.12-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-3.12-
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[notebooks]"
+
+      - name: Install Jupyter kernel
+        run: |
+          python -m ipykernel install --user --name python3 --display-name "Python 3"
+
+      - name: Execute mode-dependent notebooks (${{ matrix.optimization-mode }}, cost=${{ matrix.include-cost }})
+        # nbconvert produces the rendered .ipynb artifact (cells + plots
+        # embedded as base64) for the upload-artifact step below. The
+        # cell-by-cell fast-fail check above runs first and catches
+        # hangs / cell errors with clear progress markers, so we don't
+        # need the diagnostic wrapper that previously surrounded this
+        # step (free -h / dmesg / signal-name parsing). If a cell ever
+        # hangs again, the cell-by-cell step will surface it before we
+        # reach this nbconvert call.
+        env:
+          BOXCRETE_OPTIMIZATION_MODE: ${{ matrix.optimization-mode }}
+          BOXCRETE_INCLUDE_COST: ${{ matrix.include-cost }}
+          BOXCRETE_SMOKE_TEST: "1"
+        run: |
+          python -m jupyter nbconvert \
+              --to notebook \
+              --execute \
+              --inplace \
+              --ExecutePreprocessor.timeout=600 \
+              --ExecutePreprocessor.kernel_name=python3 \
+              notebooks/prediction_and_optimization_tutorial.ipynb
+
+      - name: Upload executed notebooks as artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          # Include both matrix dimensions in the name so the four matrix
+          # jobs upload to four distinct artifact slots. Without `include-cost`
+          # in the name the (cost=true) job for each optimization-mode races
+          # the (cost=false) job and the loser hits a 409 Conflict from the
+          # upload-artifact action.
+          name: notebooks-mode-${{ matrix.optimization-mode }}-cost-${{ matrix.include-cost }}
+          path: notebooks/prediction_and_optimization_tutorial.ipynb
+          retention-days: 7
+
+  # Notebooks that don't depend on optimization mode run once
+  mode-independent-notebooks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-3.12-${{ hashFiles('pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-3.12-
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[notebooks]"
+
+      - name: Install Jupyter kernel
+        run: |
+          python -m ipykernel install --user --name python3
+
+      - name: Execute mode-independent notebooks
+        run: |
+          python - << 'PYEOF'
+          import subprocess, sys
+          from pathlib import Path
+
+          # Notebooks that don't use BOXCRETE_OPTIMIZATION_MODE
+          MODE_DEPENDENT = {
+              "prediction_and_optimization_tutorial.ipynb",
+          }
+
+          notebooks = sorted(
+              nb for nb in Path("notebooks").glob("*.ipynb")
+              if nb.name not in MODE_DEPENDENT
+          )
+          failed = []
+
+          for nb in notebooks:
+              print(f"{'=' * 40}")
+              print(f"Executing: {nb}")
+              print(f"{'=' * 40}")
+
+              result = subprocess.run(
+                  [
+                      sys.executable, "-m", "jupyter", "nbconvert",
+                      "--to", "notebook",
+                      "--execute",
+                      "--inplace",
+                      "--ExecutePreprocessor.timeout=600",
+                      "--ExecutePreprocessor.kernel_name=python3",
+                      str(nb),
+                  ],
+                  capture_output=False,
+              )
+
+              if result.returncode != 0:
+                  failed.append(str(nb))
+                  print(f"❌ Failed: {nb}")
+              else:
+                  print(f"✅ Successfully executed: {nb}")
+              print()
+
+          if failed:
+              print(f"\n{len(failed)} notebook(s) failed:")
+              for f in failed:
+                  print(f"  - {f}")
+              sys.exit(1)
+          else:
+              print(f"\nAll {len(notebooks)} notebook(s) executed successfully.")
+          PYEOF
+
+      - name: Upload executed notebooks as artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: notebooks-independent
+          path: notebooks/*.ipynb
+          retention-days: 7
+
+  notebook-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install nbformat
+
+      - name: Validate notebook format
+        run: |
+          python - << 'EOF'
+          import nbformat
+          import sys
+          from pathlib import Path
+
+          notebooks = list(Path('notebooks').glob('*.ipynb'))
+          errors = []
+
+          for nb_path in notebooks:
+              try:
+                  with open(nb_path, 'r', encoding='utf-8') as f:
+                      nb = nbformat.read(f, as_version=4)
+                  # `read` only checks parseability; `validate` enforces
+                  # the nbformat schema. Without this, schema mismatches
+                  # (e.g. cell `id` fields requiring nbformat_minor>=5)
+                  # only surface as ERROR-level log lines during the much
+                  # slower `nbconvert --execute` step and don't fail CI.
+                  nbformat.validate(nb)
+                  print(f"✅ Valid notebook: {nb_path}")
+              except Exception as e:
+                  errors.append(f"❌ Invalid notebook {nb_path}: {e}")
+                  print(errors[-1])
+
+          if errors:
+              print(f"\n{len(errors)} notebook(s) failed validation.")
+              sys.exit(1)
+          else:
+              print(f"\nAll {len(notebooks)} notebook(s) are valid.")
+          EOF

@@ -1,0 +1,484 @@
+/*
+ * Copyright (c) 2024-2026 LabKey Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.labkey.embedded;
+
+import org.apache.catalina.Container;
+import org.apache.catalina.Context;
+import org.apache.catalina.Host;
+import org.apache.catalina.Wrapper;
+import org.apache.catalina.core.StandardContext;
+import org.apache.catalina.core.StandardHost;
+import org.apache.catalina.loader.WebappLoader;
+import org.apache.catalina.startup.Tomcat;
+import org.apache.catalina.valves.JsonAccessLogValve;
+import org.apache.coyote.http11.AbstractHttp11Protocol;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.tomcat.util.descriptor.web.ContextResource;
+import org.labkey.bootstrap.ConfigException;
+import org.springframework.boot.tomcat.TomcatWebServer;
+import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
+
+import javax.sql.DataSource;
+import java.io.File;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+
+import static org.labkey.embedded.LabKeyServer.CORS_PREFIX;
+import static org.labkey.embedded.LabKeyServer.CUSTOM_LOG4J_CONFIG;
+import static org.labkey.embedded.LabKeyServer.SERVER_GUID_PARAMETER_NAME;
+import static org.labkey.embedded.LabKeyServer.SERVER_SSL_KEYSTORE;
+
+class LabKeyTomcatServletWebServerFactory extends TomcatServletWebServerFactory
+{
+    private static final Logger LOG = LogManager.getLogger(LabKeyTomcatServletWebServerFactory.class);
+    private final LabKeyServer _server;
+
+    public LabKeyTomcatServletWebServerFactory(LabKeyServer server)
+    {
+        _server = server;
+
+        addConnectorCustomizers(connector -> {
+            LabKeyServer.TomcatProperties props = _server.tomcatProperties();
+
+            if (props.getUseBodyEncodingForURI() != null)
+            {
+                connector.setUseBodyEncodingForURI(props.getUseBodyEncodingForURI());
+            }
+
+            if (connector.getProtocolHandler() instanceof AbstractHttp11Protocol<?> handler)
+            {
+                if (props.getDisableUploadTimeout() != null)
+                {
+                    handler.setDisableUploadTimeout(props.getDisableUploadTimeout());
+                }
+                if (props.getUseSendfile() != null)
+                {
+                    handler.setUseSendfile(props.getUseSendfile());
+                }
+            }
+        });
+
+        addContextCustomizers(context -> {
+            final Container parent = context.getParent();
+            if (parent instanceof StandardHost sh)
+            {
+                sh.setErrorReportValveClass(LabKeyErrorReportValve.class.getName());
+            }
+        });
+    }
+
+    @Override
+    protected void prepareContext(Host host, ServletContextInitializer[] initializers, TempDirs tempDirs)
+    {
+        // Prevent the Spring Boot webapp from trying to deserialize the LabKey sessions
+        getSettings().getSession().setPersistent(false);
+
+        // Don't use Spring Boot's error pages, as we want to render our own
+        setErrorPages(Collections.emptySet());
+
+        super.prepareContext(host, initializers, tempDirs);
+    }
+
+    @Override
+    protected TomcatWebServer getTomcatWebServer(Tomcat tomcat)
+    {
+        LabKeyServer.ManagementServerProperties props = _server.managementServerSource();
+
+        // Don't deploy LK webapp on the separate instance running on the management port
+        if (props == null || props.getPort() != getPort())
+        {
+            tomcat.enableNaming();
+
+            // Get the context properties from Spring injection
+            LabKeyServer.ContextProperties contextProperties = _server.contextSource();
+
+            try
+            {
+                final File currentDir = new File("").getAbsoluteFile();
+                final File webAppLocation;
+
+                if (contextProperties.getWebAppLocation() == null)
+                {
+                    webAppLocation = new File(currentDir, "labkeywebapp");
+                }
+                else
+                {
+                    webAppLocation = new File(contextProperties.getWebAppLocation());
+                }
+
+                EmbeddedExtractor extractor = new EmbeddedExtractor(false);
+                if (contextProperties.getWebAppLocation() == null || extractor.foundLabkeyServerJar())
+                {
+                    extractor.extractDistribution(webAppLocation);
+                } // else, probably a local build deployment
+
+                // Turn off the default web.xml behavior so that we don't stomp over customized values
+                // from application.properties, such as session timeouts
+                tomcat.setAddDefaultWebXmlToWebapp(false);
+
+                // We want our own Webdav servlet handling requests, not Tomcat's default servlet
+                setRegisterDefaultServlet(false);
+
+                // We want the LK webapp to serialize/deserialize sessions during restarts
+                getSettings().getSession().setPersistent(true);
+
+                // Spring Boot's webapp is being deployed to the root. We have to deploy elsewhere in this initial
+                // call, but can immediately swap it with the desired place
+                StandardContext context = (StandardContext) tomcat.addWebapp("/labkey", webAppLocation.getAbsolutePath());
+                // set the root path to the context explicitly
+                context.setPath(contextProperties.getContextPath());
+
+                // Propagate standard Spring Boot properties such as the session timeout
+                configureContext(context, Collections.emptyList());
+
+                LabKeyServer.CSPFilterProperties cspFilterProperties = _server.cspSource();
+
+                if (cspFilterProperties.getEnforce() != null)
+                {
+                    context.addParameter("csp.enforce", cspFilterProperties.getEnforce());
+                }
+                if (cspFilterProperties.getReport() != null)
+                {
+                    context.addParameter("csp.report", cspFilterProperties.getReport());
+                }
+
+                // Issue 48426: Allow config for desired work directory
+                if (contextProperties.getWorkDirLocation() != null)
+                {
+                    context.setWorkDir(contextProperties.getWorkDirLocation());
+                }
+
+                // Push the JDBC connection for the primary DB into the context so that the LabKey webapp finds them
+                addDataSourceResources(contextProperties, context);
+
+                // Add extra resources to context (e.g. LDAP, JMS)
+                addExtraContextResources(contextProperties, context);
+
+                // Add the mail transport config (SMTP or Microsoft Graph)
+                addSmtpProperties(context);
+                addGraphProperties(context);
+
+                // Add the encryption key(s)
+                context.addParameter("EncryptionKey", contextProperties.getEncryptionKey());
+                if (contextProperties.getOldEncryptionKey() != null)
+                {
+                    context.addParameter("OldEncryptionKey", contextProperties.getOldEncryptionKey());
+                }
+
+                if (contextProperties.getLegacyContextPath() != null)
+                {
+                    if (contextProperties.getContextPath() != null && !contextProperties.getContextPath().isEmpty() && !contextProperties.getContextPath().equals("/"))
+                    {
+                        throw new ConfigException("contextPath.legacyContextPath is only intended for use when deploying the LabKey application to the root context path. Please update application.properties.");
+                    }
+                    context.addParameter("legacyContextPath", contextProperties.getLegacyContextPath());
+                }
+                if (contextProperties.getRequiredModules() != null)
+                {
+                    context.addParameter("requiredModules", contextProperties.getRequiredModules());
+                }
+                if (contextProperties.getExternalModules() != null)
+                {
+                    // We've long supported configuring this via a system property so propagate the value
+                    System.setProperty("labkey.externalModulesDir", contextProperties.getExternalModules());
+                }
+                if (contextProperties.getPipelineConfig() != null)
+                {
+                    context.addParameter("org.labkey.api.pipeline.config", contextProperties.getPipelineConfig());
+                }
+                if (contextProperties.isBypass2FA())
+                {
+                    // Expand single config into two different options. Can collapse/rename when we're embedded-only,
+                    // but this provides an easy backwards compatible bridge while we still support standalone Tomcat
+                    context.addParameter("org.labkey.authentication.totp.Bypass", "true");
+                    context.addParameter("org.labkey.authentication.duo.Bypass", "true");
+                }
+
+                boolean customLog4J = System.getProperty("log4j.configurationFile") != null;
+                if (!customLog4J)
+                {
+                    customLog4J = _server.loggingSource().getConfig() != null;
+                }
+                context.addParameter(CUSTOM_LOG4J_CONFIG, Boolean.toString(customLog4J));
+
+                // Add serverGUID for mothership - it tells mothership that 2 instances of a server should be considered the same for metrics gathering purposes
+                addContextProperty(context, contextProperties.getServerGUID(), SERVER_GUID_PARAMETER_NAME);
+
+                LabKeyServer.TomcatProperties tomcatProperties = _server.tomcatProperties();
+                if (tomcatProperties != null && tomcatProperties.getCors() != null)
+                {
+                    // Push these into the context so that ApiModule can register Tomcat's CorsFilter as desired
+                    LabKeyServer.CorsProperties corsProperties = tomcatProperties.getCors();
+                    addContextProperty(context, corsProperties.getAllowedOrigins(), CORS_PREFIX + "allowedOrigins");
+                    addContextProperty(context, corsProperties.getAllowedMethods(), CORS_PREFIX + "allowedMethods");
+                    addContextProperty(context, corsProperties.getAllowedHeaders(), CORS_PREFIX + "allowedHeaders");
+                    addContextProperty(context, corsProperties.getExposedHeaders(), CORS_PREFIX + "exposedHeaders");
+                    addContextProperty(context, corsProperties.getSupportCredentials(), CORS_PREFIX + "supportCredentials");
+                    addContextProperty(context, corsProperties.getUrlPattern(), CORS_PREFIX + "urlPattern");
+                    addContextProperty(context, corsProperties.getPreflightMaxAge(), CORS_PREFIX + "preflightMaxAge");
+                    addContextProperty(context, corsProperties.getRequestDecorate(), CORS_PREFIX + "requestDecorate");
+                }
+
+                LabKeyServer.ServerSslProperties sslProps = _server.serverSslSource();
+                if (null != sslProps && sslProps.getKeyStore() != null)
+                {
+                    context.addParameter(SERVER_SSL_KEYSTORE, sslProps.getKeyStore());
+                }
+
+                // Point at the special classloader with the hack for SLF4J
+                WebappLoader loader = new WebappLoader();
+                loader.setLoaderClass(LabKeySpringBootClassLoader.class.getName());
+                context.setLoader(loader);
+                context.setParentClassLoader(this.getClass().getClassLoader());
+            }
+            catch (ConfigException e)
+            {
+                throw new RuntimeException(e);
+            }
+
+            LabKeyServer.JsonAccessLog logConfig = _server.jsonAccessLog();
+            if (logConfig.isEnabled())
+            {
+                configureJsonAccessLogging(tomcat, logConfig);
+            }
+
+            Map<String, String> additionalWebapps = contextProperties.getAdditionalWebapps();
+            if (additionalWebapps != null)
+            {
+                setRegisterDefaultServlet(true);
+
+                for (Map.Entry<String, String> entry : additionalWebapps.entrySet())
+                {
+                    String contextPath = entry.getKey();
+                    if (!contextPath.startsWith("/"))
+                    {
+                        contextPath = "/" + contextPath;
+                    }
+                    String docBase = entry.getValue();
+                    if (docBase == null || docBase.isEmpty())
+                    {
+                        throw new ConfigException("No docBase supplied additional webapp at context path " + contextPath);
+                    }
+                    Context ctx = tomcat.addWebapp(contextPath, docBase);
+
+
+                    // Issue 53723: register the default servlet without enabling JSPs
+
+                    // Code copied from Tomcat.initWebappDefaults(), removing JSP-specific initialization
+                    Wrapper servlet = Tomcat.addServlet(ctx, "default", "org.apache.catalina.servlets.DefaultServlet");
+                    servlet.setLoadOnStartup(1);
+                    servlet.setOverridable(true);
+                    ctx.addServletMappingDecoded("/", "default");
+                    Tomcat.addDefaultMimeTypeMappings(ctx);
+                    ctx.addWelcomeFile("index.html");
+                    ctx.addWelcomeFile("index.htm");
+                    // Any application configured welcome files should override the defaults.
+                    if (ctx instanceof StandardContext) {
+                        ((StandardContext) ctx).setReplaceWelcomeFiles(true);
+                    }
+                }
+            }
+        }
+
+        return super.getTomcatWebServer(tomcat);
+    }
+
+    private void addContextProperty(StandardContext context, String value, String name)
+    {
+        if (null != value)
+        {
+            context.addParameter(name, value);
+        }
+    }
+
+    // Issue 48565: allow for JSON-formatted access logs
+    private void configureJsonAccessLogging(Tomcat tomcat, LabKeyServer.JsonAccessLog logConfig)
+    {
+        var v = new JsonAccessLogValve();
+
+        // Configure for stdout, our only current use case
+        v.setPrefix("stdout");
+        v.setDirectory("/dev");
+        v.setBuffered(false);
+        v.setSuffix("");
+        v.setFileDateFormat("");
+        v.setContainer(tomcat.getHost());
+
+        // Now the settings that we support via application.properties
+        v.setPattern(logConfig.getPattern());
+        v.setConditionIf(logConfig.getConditionIf());
+        v.setConditionUnless(logConfig.getConditionUnless());
+
+        tomcat.getEngine().getPipeline().addValve(v);
+    }
+
+    /**
+     * Wires up data sources from the older indexed config approach, like:
+     * context.dataSourceName[0]=jdbc/labkeyDataSource
+     * context.driverClassName[0]=org.postgresql.Driver
+     */
+    private void addDataSourceResources(LabKeyServer.ContextProperties props, StandardContext context) throws ConfigException
+    {
+        var numOfDataResources = props.getUrl().size();
+
+        if (numOfDataResources != props.getDataSourceName().size() ||
+                numOfDataResources != props.getDriverClassName().size() ||
+                numOfDataResources != props.getUsername().size() ||
+                numOfDataResources != props.getPassword().size())
+        {
+            throw new ConfigException("DataSources not configured properly. Must have all the required properties for all datasources: dataSourceName, driverClassName, userName, password, url");
+        }
+
+        for (int i = 0; i < numOfDataResources; i++)
+        {
+            ContextResource dataSourceResource = new ContextResource();
+            dataSourceResource.setName(props.getDataSourceName().get(i));
+            dataSourceResource.setAuth("Container");
+            dataSourceResource.setType(DataSource.class.getName());
+            dataSourceResource.setProperty("driverClassName", props.getDriverClassName().get(i));
+            dataSourceResource.setProperty("url", props.getUrl().get(i));
+            dataSourceResource.setProperty("password", props.getPassword().get(i));
+            dataSourceResource.setProperty("username", props.getUsername().get(i));
+
+            dataSourceResource.setProperty("maxTotal", getPropValue(props.getMaxTotal(), i, LabKeyServer.MAX_TOTAL_CONNECTIONS_DEFAULT, "maxTotal"));
+            dataSourceResource.setProperty("maxIdle", getPropValue(props.getMaxIdle(), i, LabKeyServer.MAX_IDLE_DEFAULT, "maxIdle"));
+            dataSourceResource.setProperty("maxWaitMillis", getPropValue(props.getMaxWaitMillis(), i, LabKeyServer.MAX_WAIT_MILLIS_DEFAULT, "maxWaitMillis"));
+            dataSourceResource.setProperty("accessToUnderlyingConnectionAllowed", getPropValue(props.getAccessToUnderlyingConnectionAllowed(), i, LabKeyServer.ACCESS_TO_CONNECTION_ALLOWED_DEFAULT, "accessToUnderlyingConnectionAllowed"));
+            dataSourceResource.setProperty("validationQuery", getPropValue(props.getValidationQuery(), i, LabKeyServer.VALIDATION_QUERY_DEFAULT, "validationQuery"));
+
+            // These two properties are handled differently, as separate parameters
+            String displayName = getPropValue(props.getDisplayName(), i, null, "displayName");
+            if (displayName != null)
+            {
+                context.addParameter(dataSourceResource.getName() + ":DisplayName", displayName);
+            }
+            String logQueries = getPropValue(props.getLogQueries(), i, null, "logQueries");
+            if (logQueries != null)
+            {
+                context.addParameter(dataSourceResource.getName() + ":LogQueries", logQueries);
+            }
+
+            context.getNamingResources().addResource(dataSourceResource);
+        }
+    }
+
+    private void addExtraContextResources(LabKeyServer.ContextProperties contextProperties, StandardContext context) throws ConfigException
+    {
+        Map<String, Map<String, Map<String, String>>> resourceMaps = Objects.requireNonNullElse(contextProperties.getResources(), Collections.emptyMap());
+
+        for (Map.Entry<String, Map<String, Map<String, String>>> parentEntry : resourceMaps.entrySet())
+        {
+            for (Map.Entry<String, Map<String, String>> entry : parentEntry.getValue().entrySet())
+            {
+                String resourceTypeString = parentEntry.getKey();
+
+                ResourceType resourceType;
+                try
+                {
+                    resourceType = ResourceType.valueOf(resourceTypeString);
+                }
+                catch (IllegalArgumentException e)
+                {
+                    resourceType = ResourceType.generic;
+                }
+
+                String name = parentEntry.getKey() + "/" + entry.getKey();
+
+                resourceType.addResource(name, entry.getValue(), context);
+            }
+        }
+    }
+
+    private String getPropValue(Map<Integer, String> propValues, Integer resourceKey, String defaultValue, String propName)
+    {
+        if (propValues == null)
+        {
+            LOG.debug("{} property was not provided, using default", propName);
+            return defaultValue;
+        }
+
+        if (!propValues.containsKey(resourceKey))
+            LOG.debug("{} property was not provided for resource [{}], using default [{}]", propName, resourceKey, defaultValue);
+
+        String val = propValues.getOrDefault(resourceKey, defaultValue);
+        return val != null && !val.isBlank() ? val.trim() : defaultValue;
+    }
+
+    private void addSmtpProperties(StandardContext context)
+    {
+        // Get session/mail properties
+        LabKeyServer.MailProperties mailProps = _server.smtpSource();
+
+        if (mailProps.getSmtpHost() != null)
+        {
+            context.addParameter("mail.smtp.host", mailProps.getSmtpHost());
+        }
+        if (mailProps.getSmtpUser() != null)
+        {
+            context.addParameter("mail.smtp.user", mailProps.getSmtpUser());
+        }
+        if (mailProps.getSmtpPort() != null)
+        {
+            context.addParameter("mail.smtp.port", mailProps.getSmtpPort());
+        }
+        if (mailProps.getSmtpFrom() != null)
+        {
+            context.addParameter("mail.smtp.from", mailProps.getSmtpFrom());
+        }
+        if (mailProps.getSmtpPassword() != null)
+        {
+            context.addParameter("mail.smtp.password", mailProps.getSmtpPassword());
+        }
+        if (mailProps.getSmtpStartTlsEnable() != null)
+        {
+            context.addParameter("mail.smtp.starttls.enable", mailProps.getSmtpStartTlsEnable());
+        }
+        if (mailProps.getSmtpSocketFactoryClass() != null)
+        {
+            context.addParameter("mail.smtp.socketFactory.class", mailProps.getSmtpSocketFactoryClass());
+        }
+        if (mailProps.getSmtpAuth() != null)
+        {
+            context.addParameter("mail.smtp.auth", mailProps.getSmtpAuth());
+        }
+    }
+
+    private void addGraphProperties(StandardContext context)
+    {
+        // Get Microsoft Graph mail properties
+        LabKeyServer.GraphMailProperties graphProps = _server.graphSource();
+
+        if (graphProps.getTenantId() != null)
+        {
+            context.addParameter("mail.graph.tenantId", graphProps.getTenantId());
+        }
+        if (graphProps.getClientId() != null)
+        {
+            context.addParameter("mail.graph.clientId", graphProps.getClientId());
+        }
+        if (graphProps.getClientSecret() != null)
+        {
+            context.addParameter("mail.graph.clientSecret", graphProps.getClientSecret());
+        }
+        if (graphProps.getFromAddress() != null)
+        {
+            context.addParameter("mail.graph.fromAddress", graphProps.getFromAddress());
+        }
+    }
+}

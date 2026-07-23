@@ -1,0 +1,87 @@
+{
+  "name": "agslint",
+  "displayName": "AGSLint",
+  "description": "Linting and validation for AGS3 and AGS4 files.",
+  "license": "LGPL-3.0-only",
+  "version": "0.1.3",
+  "publisher": "aecomseadigital",
+  "private": false,
+  "type": "commonjs",
+  "homepage": "https://github.com/aecomseadigital/agslint",
+  "bugs": {
+    "url": "https://github.com/aecomseadigital/agslint/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aecomseadigital/agslint.git"
+  },
+  "categories": [
+    "Linters",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "ags",
+    "ags3",
+    "ags4",
+    "geotechnical",
+    "lint",
+    "validation"
+  ],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "main": "./src/extension.js",
+  "activationEvents": [
+    "onLanguage:ags",
+    "onCommand:agslint.runLint",
+    "onCommand:agslint.showVersion"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "ags",
+        "aliases": [
+          "AGS",
+          "ags"
+        ],
+        "extensions": [
+          ".ags"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "ags",
+        "scopeName": "source.ags",
+        "path": "./syntaxes/ags.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "agslint.runLint",
+        "title": "AGSLint: Run Lint on File"
+      },
+      {
+        "command": "agslint.showVersion",
+        "title": "AGSLint: Show AGS Version"
+      }
+    ]
+  },
+  "scripts": {
+    "build-references": "node ./scripts/build-references.js",
+    "changeset": "changeset",
+    "lint-file": "node ./scripts/lint-file.js",
+    "package:vsix": "node ./scripts/package-vsix.js",
+    "release:local": "node ./scripts/release-local.js",
+    "release:notes": "node ./scripts/write-release-notes.js",
+    "release:verify": "npm test && npm run package:vsix",
+    "release:version": "changeset version",
+    "test": "node ./src/test/run-tests.js"
+  },
+  "devDependencies": {
+    "@changesets/changelog-git": "^0.2.1",
+    "@changesets/cli": "^2.29.7",
+    "@vscode/vsce": "^3.6.2"
+  }
+}

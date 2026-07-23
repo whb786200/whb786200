@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+    <!-- Prevent match against unrelated "rengine" at https://github.com/yogeshojha/rengine -->
+    <suppress>
+        <notes><![CDATA[
+      file name: rengine-0.6-8.1.jar
+      ]]></notes>
+        <packageUrl regex="true">^pkg:maven/net\.rforge/rengine@.*$</packageUrl>
+        <cve>CVE-2022-1813</cve>
+        <cve>CVE-2021-39491</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: rserve-0.6-8.1.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/net\.rforge/rserve@.*$</packageUrl>
+        <cve>CVE-2022-1813</cve>
+        <cve>CVE-2021-39491</cve>
+    </suppress>
+
+    <!-- Tangled CVEs. See https://github.com/jeremylong/DependencyCheck/issues/4614 and https://github.com/OSSIndex/vulns/issues/316 -->
+    <suppress>
+        <notes><![CDATA[
+   file name: xercesImpl-2.12.2.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/xerces/xercesImpl@.*$</packageUrl>
+        <vulnerabilityName>CVE-2017-10355</vulnerabilityName>
+    </suppress>
+
+    <!--
+    For our purposes, Random is good enough, and not worth publishing our own version of the artifact that uses
+    SecureRandom. https://github.com/penggle/kaptcha/issues/3
+    -->
+    <suppress>
+        <notes><![CDATA[
+   file name: kaptcha-2.3.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.google\.code\.kaptcha/kaptcha@.*$</packageUrl>
+        <cve>CVE-2018-18531</cve>
+    </suppress>
+
+    <!-- False positive - we're not bundling Struts as part of Mule -->
+    <suppress>
+        <notes><![CDATA[
+   file name: mule-module-builders-1.4.4e.jar (shaded: org.mule.modules:mule-module-ognl:1.4.4)
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.mule\.modules/mule\-module\-ognl@.*$</packageUrl>
+        <cve>CVE-2016-3093</cve>
+    </suppress>
+
+    <!-- False positive - we're not bundling Windows PGP -->
+    <suppress>
+        <notes><![CDATA[
+   file name: mule-module-builders-1.4.4e.jar (shaded: org.mule.modules:mule-module-pgp:1.4.4)
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.mule\.modules/mule\-module\-pgp@.*$</packageUrl>
+        <cve>CVE-2001-0265</cve>
+    </suppress>
+
+    <!-- No WebSockets for Mule, so no risk -->
+    <suppress>
+        <notes><![CDATA[
+   file name: mule-module-builders-1.4.4e.jar (shaded: org.mule.modules:mule-module-wssecurity:1.4.4)
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.mule\.modules/mule\-module\-wssecurity@.*$</packageUrl>
+        <cve>CVE-2021-4236</cve>
+    </suppress>
+
+    <!-- No FTP for Mule, so no risk -->
+    <suppress>
+        <notes><![CDATA[
+   file name: mule-module-builders-1.4.4e.jar (shaded: org.mule.transports:mule-transport-ftp:1.4.4)
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.mule\.transports/mule\-transport\-ftp@.*$</packageUrl>
+        <cve>CVE-2023-22551</cve>
+    </suppress>
+
+    <!-- False positive - different XFire, and we're certainly not opening UDP port 25777 -->
+    <suppress>
+        <notes><![CDATA[
+   file name: mule-module-builders-1.4.4e.jar (shaded: org.mule.transports:mule-transport-xfire:1.4.4)
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.mule\.transports/mule\-transport\-xfire@.*$</packageUrl>
+        <cve>CVE-2006-5391</cve>
+    </suppress>
+
+    <!--
+    This is a dependency of Java-FPDF, used by the WNPRC billing module for PDF generation, which hasn't been updated
+    to reference the now-renamed Commons Imaging library instead of the old Sanselan incubator. The CVE is related
+    to file parsing, not generation, so we're not vulnerable
+    -->
+    <suppress>
+        <notes><![CDATA[
+   file name: sanselan-0.97-incubator.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.sanselan/sanselan@.*$</packageUrl>
+        <vulnerabilityName>CVE-2018-17201</vulnerabilityName>
+    </suppress>
+
+    <!--
+    suppress CVE-2023-52070 for jfreechart, may become moot after subsequent upgrades
+    -->
+    <suppress>
+        <notes><![CDATA[
+   file name: jfreechart-1.0.19.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.jfree/jfreechart@.*$</packageUrl>
+        <vulnerabilityName>CVE-2023-52070</vulnerabilityName>
+    </suppress>
+
+    <!-- Related to the setting of channel binding as required, which is not relevant to us. -->
+    <suppress>
+        <notes><![CDATA[
+       file name: postgresql-42.7.4.jar
+       ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.postgresql/postgresql@.*$</packageUrl>
+        <vulnerabilityName>CVE-2025-49146</vulnerabilityName>
+    </suppress>
+
+    <!-- Currently no update is available for the old commons-lang component, so we must suppress. -->
+    <suppress>
+       <notes><![CDATA[
+       file name: commons-lang-2.6.jar
+       ]]></notes>
+       <packageUrl regex="true">^pkg:maven/commons-lang/commons-lang@.*$</packageUrl>
+       <vulnerabilityName>CVE-2025-48924</vulnerabilityName>
+    </suppress>
+
+    <!--
+    GSON is getting flagged for "Connect2id Nimbus JOSE + JWT before 10.0.2 allows a remote attacker
+    to cause a denial of service via a deeply nested JSON object supplied in a JWT claim set, because of
+    uncontrolled recursion." Seems like a case of mistaken identity, so suppress it.
+    -->
+    <suppress>
+       <notes><![CDATA[
+       file name: gson-2.8.9.jar
+       ]]></notes>
+       <packageUrl regex="true">^pkg:maven/com\.google\.code\.gson/gson@.*$</packageUrl>
+       <vulnerabilityName>CVE-2025-53864</vulnerabilityName>
+    </suppress>
+
+    <!--
+    False positives - API jars are getting matched to old (18.3) LabKey Server releases
+    -->
+    <suppress>
+        <notes><![CDATA[
+        file name: provisioning-2.1.0-api.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.labkey\.api/provisioning@.*$</packageUrl>
+        <cpe>cpe:/a:labkey:labkey_server</cpe>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        file name: labkey-client-api-7.0.0.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.labkey\.api/labkey-client-api@.*$</packageUrl>
+        <cpe>cpe:/a:labkey:labkey_server</cpe>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        file name: labkey-api-jdbc-3.1.0-all.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.labkey\.api/labkey-api-jdbc@.*$</packageUrl>
+        <cpe>cpe:/a:labkey:labkey_server</cpe>
+    </suppress>
+
+    <!--
+    False positives from CVEs in the bzip2 Debian package
+    -->
+    <suppress>
+        <notes><![CDATA[
+        file name: bzip2-0.9.1.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.itadaki/bzip2@.*$</packageUrl>
+        <cpe>cpe:/a:bzip:bzip2</cpe>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        file name: bzip2-0.9.1.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.itadaki/bzip2@.*$</packageUrl>
+        <cpe>cpe:/a:bzip2_project:bzip2</cpe>
+    </suppress>
+
+    <!--
+    False positives - these CVEs cover MSAL libraries across multiple languages (Java, JavaScript, .NET, Python),
+    each versioned independently. The scanner conflates the Java msal4j library with the JavaScript
+    @azure/msal-browser/@azure/msal-node libraries. Both CVEs were fixed in msal4j 1.15.1 and 1.16.1
+    respectively; our version (1.23.1+) is not affected.
+    -->
+    <suppress>
+        <notes><![CDATA[
+        file name: msal4j-*.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.microsoft\.azure/msal4j@.*$</packageUrl>
+        <vulnerabilityName>CVE-2024-35255</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        file name: msal4j-*.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.azure/azure-identity@.*$</packageUrl>
+        <vulnerabilityName>CVE-2024-35255</vulnerabilityName>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+        file name: msal4j-*.jar
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.azure/azure-identity@.*$</packageUrl>
+        <vulnerabilityName>CVE-2023-36415</vulnerabilityName>
+    </suppress>
+
+    <!--
+    Rhino 1.7R3 is getting flagged with a potential DoS issue when toFixed() is called on very small floating point numbers.
+    Upgrading to a fixed version is not trivial. See https://github.com/LabKey/internal-issues/issues/724 for details.
+    -->
+    <suppress>
+       <notes><![CDATA[
+       file name: rhino-1.7R3.jar
+       ]]></notes>
+       <packageUrl regex="true">^pkg:maven/org\.mozilla/rhino@.*$</packageUrl>
+       <vulnerabilityName>CVE-2025-66453</vulnerabilityName>
+    </suppress>
+
+    <!-- Lots of false positives for Spring AI 2.0 due to bad matches-->
+    <suppress>
+        <notes><![CDATA[
+   file name: spring-ai-autoconfigure-mcp-server-common-2.0.0-M2.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.ai/spring-ai-autoconfigure-mcp-server-common@.*$</packageUrl>
+        <cpe>cpe:/a:vmware:server</cpe>
+        <cpe>cpe:/a:vmware:vmware_server</cpe>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
+   file name: spring-ai-autoconfigure-mcp-server-webmvc-2.0.0-M2.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.ai/spring-ai-autoconfigure-mcp-server-webmvc@.*$</packageUrl>
+        <cpe>cpe:/a:vmware:server</cpe>
+        <cpe>cpe:/a:vmware:vmware_server</cpe>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
+   file name: spring-ai-starter-mcp-server-webmvc-2.0.0-M2.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.ai/spring-ai-starter-mcp-server-webmvc@.*$</packageUrl>
+        <cpe>cpe:/a:vmware:server</cpe>
+        <cpe>cpe:/a:vmware:vmware_server</cpe>
+    </suppress>
+
+    <!--
+    Some PDFBox example code (ExtractEmbeddedFiles) contains a path traversal vulnerability. The example code isn't
+    packaged in any jars and we already have checks in place to prevent path traversal vulnerabilities.
+    -->
+    <suppress>
+        <notes><![CDATA[
+   file name: pdfbox-3.0.7.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox@.*$</packageUrl>
+        <cve>CVE-2026-23907</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: pdfbox-debugger-3.0.7.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox-debugger@.*$</packageUrl>
+        <cve>CVE-2026-23907</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: pdfbox-io-3.0.7.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox-io@.*$</packageUrl>
+        <cve>CVE-2026-23907</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: pdfbox-tools-3.0.7.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox-tools@.*$</packageUrl>
+        <cve>CVE-2026-23907</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: pdfbox-3.0.7.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox@.*$</packageUrl>
+        <cve>CVE-2026-33929</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: pdfbox-debugger-3.0.7.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox-debugger@.*$</packageUrl>
+        <cve>CVE-2026-33929</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: pdfbox-io-3.0.7.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox-io@.*$</packageUrl>
+        <cve>CVE-2026-33929</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: pdfbox-tools-3.0.7.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.pdfbox/pdfbox-tools@.*$</packageUrl>
+        <cve>CVE-2026-33929</cve>
+    </suppress>
+
+    <!--
+    False-positives
+    https://github.com/dependency-check/DependencyCheck/issues/8391
+    https://github.com/dependency-check/DependencyCheck/issues/8392
+    -->
+    <suppress>
+        <notes><![CDATA[
+    file name: mcp-spring-webmvc-2.0.0-M3.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.ai/mcp-spring-webmvc@.*$</packageUrl>
+        <cpe>cpe:/a:vmware:server</cpe>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: mcp-spring-webmvc-2.0.0-M3.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.ai/mcp-spring-webmvc@.*$</packageUrl>
+        <cpe>cpe:/a:vmware:vmware_server</cpe>
+    </suppress>
+
+    <!--
+    False positives: OWASP checker seems to be confusing kiota libraries (https://github.com/microsoft/kiota-java)
+    with kiota tool (https://github.com/microsoft/kiota/)
+    -->
+    <suppress>
+        <notes><![CDATA[
+    file name: microsoft-kiota-abstractions-1.9.0.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.microsoft\.kiota/microsoft-kiota-abstractions@.*$</packageUrl>
+        <cve>CVE-2026-41134</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: microsoft-kiota-authentication-azure-1.9.0.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.microsoft\.kiota/microsoft-kiota-authentication-azure@.*$</packageUrl>
+        <cve>CVE-2026-41134</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: microsoft-kiota-http-okHttp-1.9.0.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.microsoft\.kiota/microsoft-kiota-http-okHttp@.*$</packageUrl>
+        <cve>CVE-2026-41134</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: microsoft-kiota-serialization-form-1.9.0.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.microsoft\.kiota/microsoft-kiota-serialization-form@.*$</packageUrl>
+        <cve>CVE-2026-41134</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: microsoft-kiota-serialization-json-1.9.0.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.microsoft\.kiota/microsoft-kiota-serialization-json@.*$</packageUrl>
+        <cve>CVE-2026-41134</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: microsoft-kiota-serialization-multipart-1.9.0.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.microsoft\.kiota/microsoft-kiota-serialization-multipart@.*$</packageUrl>
+        <cve>CVE-2026-41134</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: microsoft-kiota-serialization-text-1.9.0.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.microsoft\.kiota/microsoft-kiota-serialization-text@.*$</packageUrl>
+        <cve>CVE-2026-41134</cve>
+    </suppress>
+
+    <!--
+    CVE-2026-33117 against "Azure SDK for Java" might affect these libraries, but we ship the latest and our use case
+    (requiring server admins to provide credentials) is certainly not vulnerable. Newer versions may allow us to remove
+    this suppression.
+    -->
+    <suppress>
+        <notes><![CDATA[
+    file name: azure-core-1.58.0.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.azure/azure-core@.*$</packageUrl>
+        <cve>CVE-2026-33117</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: azure-core-http-netty-1.16.4.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.azure/azure-core-http-netty@.*$</packageUrl>
+        <cpe>cpe:/a:microsoft:azure_sdk_for_java</cpe>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: azure-identity-1.18.3.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.azure/azure-identity@.*$</packageUrl>
+        <cpe>cpe:/a:microsoft:azure_identity_sdk</cpe>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: azure-identity-1.18.3.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.azure/azure-identity@.*$</packageUrl>
+        <cpe>cpe:/a:microsoft:azure_sdk_for_java</cpe>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+    file name: azure-json-1.5.1.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.azure/azure-json@.*$</packageUrl>
+        <cpe>cpe:/a:microsoft:azure_sdk_for_java</cpe>
+    </suppress>
+    <!--
+    Checker is confusing json-schema-validator with Nu Html Checker
+    https://www.sentinelone.com/vulnerability-database/cve-2025-15104/
+    -->
+    <suppress>
+        <notes><![CDATA[
+    file name: json-schema-validator-3.0.1.jar
+    ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.networknt/json-schema-validator@.*$</packageUrl>
+        <cve>CVE-2025-15104</cve>
+    </suppress>
+
+</suppressions>

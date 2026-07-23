@@ -1,0 +1,11 @@
+
+// Base modules will be included automatically by `settings.gradle`
+include ":server:modules:platform:announcements"
+include ":server:modules:platform:assay"
+include ":server:modules:platform:issues"
+include ":server:modules:platform:list"
+include ":server:modules:platform:search"
+include ":server:modules:platform:study"
+include ":server:modules:platform:survey"
+include ":server:modules:platform:visualization"
+include ":server:modules:platform:wiki"

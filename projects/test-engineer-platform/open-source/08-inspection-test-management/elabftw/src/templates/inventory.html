@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}
+<div class='d-flex'>
+  <h1 id='pageTitle'>{{ pageTitle }}</h1>
+  <a class='ml-auto' href='/api/v2/reports?scope=inventory&format=csv'>
+    <button class='btn btn-secondary'>{{ 'Export'|trans }}</button>
+  </a>
+</div>
+<hr>
+{% endblock title %}
+
+{% block body %}
+  <div class='pl-3 mb-5'>
+    <h4><label for='storageSearchInput'>{{ 'Search containers or locations'|trans }}</label></h4>
+    <form class='input-group' method='get'>
+      {% set containerSearchPlaceholder = ['Sodium', 'Saccharose', 'Acetone', 'CK-666', 'Fibronectin'] %}
+      <input class='form-control' name='q' id='storageSearchInput' placeholder='{{ random(containerSearchPlaceholder) }}' value='{{ App.Request.query.getString('q') }}' />
+      <div class='input-group-append'>
+        <button class='btn btn-primary' type='submit' data-action='search-storage'>{{ 'Search'|trans }}</button>
+      </div>
+    </form>
+
+    {% if containersArr|length == 0 and App.Request.query.has('q') %}
+      {{ 'No results found'|trans|msg('warning', false) }}
+    {% endif %}
+
+    <ul class='list-group mt-2'>
+    {# Rows are aggregated server-side to one entry per (resource, location); see InventoryController::aggregateContainers #}
+    {% for container in containersArr %}
+      <li class='list-group-item'>
+        {% if container.entity_custom_id %}<span class='mr-1'>{{ container.entity_custom_id }}</span>{% endif %}<a href='{{ container.page }}.php?mode=view&id={{ container.entity_id }}'>{{ container.entity_title }}</a>
+        {% if container.container_count > 1 %}
+          {% if container.qty_mixed_units %}
+            {{ '%d containers (mixed units) in %s'|trans|format(container.container_count, container.full_path) }}
+          {% else %}
+            {{ '%s %s total across %d containers in %s'|trans|format(container.qty_total, container.qty_unit, container.container_count, container.full_path) }}
+          {% endif %}
+        {% else %}
+          {{ container.qty_stored }} {{ container.qty_unit }} in {{ container.full_path }}
+        {% endif %}
+      </li>
+    {% endfor %}
+    </ul>
+  </div>
+
+  <div class='pl-3 mb-5'>
+    {% if App.Config.configArr.inventory_require_edit_rights == 1 %}
+      <p>{{ 'Note: only users who were given permission to edit the inventory locations can modify the locations (add/edit/remove).'|trans }}</p>
+    {% endif %}
+    {% set inventoryDisabled = App.Users.userData.can_manage_inventory_locations == 0 and App.Config.configArr.inventory_require_edit_rights == 1 %}
+    <div class='d-flex'>
+      <h4>{{ 'Browse inventory locations'|trans }}</h4>
+      <div class='ml-auto'>
+        <button type='button' {{ inventoryDisabled ? 'disabled' }} class='btn btn-secondary btn-sm' data-parent-id='' data-action='add-storage-children'><i class='fas fa-plus-circle mr-1'></i>{{ 'Add root element'|trans }}</button>
+      </div>
+    </div>
+    {% include 'storage-list.html' with {'storage_editable': not inventoryDisabled, 'is_entity': false} %}
+  </div>
+  {% if not inventoryDisabled %}
+    {% include 'move-storage-modal.html' %}
+  {% endif %}
+{% endblock body %}

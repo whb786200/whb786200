@@ -1,0 +1,1907 @@
+/**
+ * @author Nicolas CARPi <nico-git@deltablot.email>
+ * @copyright 2012 Nicolas CARPi
+ * @see https://www.elabftw.net Official website
+ * @license AGPL-3.0
+ * @package elabftw
+ */
+@import 'variables';
+/* import this first to be able to modify bootstrap theme */
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+/* override bootstrap theme */
+$theme-colors: (
+  'primary': $elabblue,
+  'secondary': $medium,
+  'danger': $dangerred,
+  'neutral': $medium,
+);
+
+$dropdown-link-active-bg: var(--primary);
+/* make the non active link in navbar have slightly more contrast */
+$navbar-dark-color: var(--chrome-fg);
+$text-muted: var(--medium);
+@import 'bootstrap/scss/bootstrap';
+@import 'prismjs/themes/prism';
+@import '@deltablot/dropzone/src/dropzone';
+@import '@fancyapps/fancybox/dist/jquery.fancybox';
+@import 'jquery-ui/themes/base/core';
+@import 'jquery-ui/themes/base/autocomplete';
+@import 'jquery-ui/themes/base/menu';
+@import 'jquery-ui/themes/base/sortable';
+@import 'jquery-ui/themes/base/theme';
+
+@import './fontawesome/fontawesome';
+@import './fontawesome/solid';
+@import './fontawesome/brands';
+@import './fontawesome/regular';
+@import 'material-icons';
+
+@import 'animations';
+@import 'autocomplete';
+@import 'buttons';
+@import 'charts';
+@import 'footer';
+@import 'header';
+@import 'star-rating';
+@import 'jsoneditor';
+@import 'ove';
+@import 'spreadsheet-editor';
+@import 'search-syntax-highlighting';
+@import 'tom-select';
+@import 'tinymce';
+@import 'prism';
+@import 'skeletons';
+
+/* Font is Lato */
+@font-face {
+  font-display: swap;
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 400;
+  src: url('fonts/lato-regular.woff2') format('woff2');
+}
+@font-face {
+  font-display: swap;
+  font-family: 'Lato';
+  font-style: italic;
+  font-weight: 400;
+  src: url('fonts/lato-italic.woff2') format('woff2');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 700;
+  src: url('fonts/lato-bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Lato';
+  font-style: italic;
+  font-weight: 700;
+  src: url('fonts/lato-bold-italic.woff2') format('woff2');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 900;
+  src: url('fonts/lato-black.woff2') format('woff2');
+}
+
+@font-face {
+  font-display: swap;
+  font-family: 'Lato';
+  font-style: italic;
+  font-weight: 900;
+  src: url('fonts/lato-black-italic.woff2') format('woff2');
+}
+
+body {
+  background: var(--mainbackground);
+  color: var(--mediumstrong);
+}
+
+/* little shadow on top of the screen for no reasons */
+/* TinyMCE selector for body in preview excluded to prevent flashing */
+body::before,
+.mce-preview-body::before {
+  &:not(.no-shadow) {
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+    content: '';
+    left: 0;
+    top: -10px;
+    width: 100%;
+  }
+}
+
+body::before {
+  height: 10px;
+  position: fixed;
+  z-index: 100;
+}
+
+.mce-preview-body::before {
+  height: 4rem;
+  position: absolute;
+}
+
+/* this is the big white thing that holds everything */
+#container {
+  font: 100% 'Lato', Verdana, Arial, Helvetica, sans-serif;
+  font-weight: 500;
+  padding: 0;
+}
+
+/* holds the main content */
+.real-container {
+  margin: auto;
+  margin-top: 20px;
+  padding: 0 5%;
+  /* reduce padding for small screen sizes */
+  @media (max-width: 992px) {
+    padding: 1%;
+  }
+}
+
+/* only on large viewports */
+@media (min-width: 1280px) {
+  .max-width-70 {
+    max-width: 1280px;
+  }
+}
+
+hr {
+  border-top: 1px solid var(--secondary-muted);
+}
+/* LINKS */
+a,
+.link-like {
+  color: var(--primary);
+  text-decoration: none;
+
+  &:hover {
+    color: color-mix(in srgb, var(--primary) 85%, $white);
+    text-decoration: underline;
+  }
+}
+
+/* add arrow going out of square icon after external links */
+.external-link::after {
+  content: '\f08e'; // arrow-up-right-from-square
+  font-family: 'Font Awesome 6 Free';
+  font-size: 0.6em;
+  font-weight: 700;
+  padding-left: 3px;
+  vertical-align: text-top;
+}
+
+select:not([multiple]) {
+  appearance: none;
+  background: var(--white) url('images/ico-arrow.png') no-repeat 97% 56%;
+  border: 1px solid var(--firstlevel);
+  color: var(--mediumstrong);
+}
+
+.form-control {
+  background-color: var(--white);
+  border: 1px solid var(--firstlevel);
+  color: var(--strongest);
+}
+
+.dark-mode {
+  :where(input, textarea).form-control:read-only,
+  .form-control:disabled {
+    background-color: var(--firstlevel);
+    color: var(--strongest);
+  }
+
+  .modal-content {
+    background-color: var(--mainbackground);
+  }
+
+  .modal-header,
+  .modal-footer {
+    border-color: var(--secondary-muted);
+  }
+
+  .close,
+  .form-control-plaintext,
+  pre {
+    color: var(--mediumstrong);
+  }
+
+  .hover-danger:hover {
+    background-color: var(--darkred);
+    border-color: var(--lightred);
+  }
+}
+
+.logo-dark { display: none; }
+
+.dark-mode .logo-dark { display: block; }
+.dark-mode .logo-light { display: none; }
+
+/* prevent the caret from being too close from text */
+/* stylelint-disable-next-line selector-no-qualifying-type */
+select.form-control {
+  padding-right: 31px;
+}
+
+.form-control:focus {
+  background-color: var(--white);
+  border-color: var(--primary);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(41, 174, 185, 0.6);
+  color: var(--strongest);
+  z-index: 3;
+}
+
+/* textarea for metadata (extra fields) */
+/* default size same as other inputs to keep harmony */
+.form-textarea {
+  min-height: 2rem;
+  overflow: auto;
+  resize: vertical;
+}
+
+/* fix bootstrap setting it to nowrap, it results in long content making the whole thing super wide */
+.dropdown-item.wrap {
+  white-space: normal;
+}
+
+.dropdown-menu {
+  background: var(--white);
+}
+
+.dropdown-item {
+  color: var(--medium);
+  cursor: pointer;
+
+  a,
+  i {
+    color: var(--strongest);
+  }
+}
+
+.dropdown-item > a {
+  color: var(--strongest);
+}
+
+.dropdown-item:hover {
+  background-color: var(--superlight);
+  color: var(--strongest);
+}
+
+/* BLOCKQUOTE */
+blockquote {
+  background: var(--superlight);
+  border-left: 10px solid var(--secondlevel);
+  margin: 1.5em 10px;
+  padding: 0.5em 10px;
+  quotes: '\201C''\201D''\2018''\2019';
+}
+
+blockquote::before {
+  color: var(--firstlevel);
+  content: open-quote;
+  font-size: 4em;
+  line-height: 0.1em;
+  margin-right: 0.25em;
+  vertical-align: -0.4em;
+}
+
+/* TITLES */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+#documentTitle {
+  color: var(--medium);
+  font-weight: normal;
+  margin-top: 0;
+}
+
+h1 { font-size: 180%; }
+
+h2 { font-size: 160%; }
+
+h3 { font-size: 150%; }
+
+h4 { font-size: 140%; }
+
+h5 {
+  border-bottom: 0;
+  font-size: 120%;
+}
+
+/* HEAD */
+
+/* BEGIN HELP CONTAINER */
+.tip::before {
+  color: var(--primary);
+  content: '☺ ';
+  font-size: 120%;
+}
+
+.tip {
+  list-style: none;
+}
+
+/*  MENU is below main nav */
+.tabbed-menu {
+  border-bottom: 1px solid var(--firstlevel);
+  line-height: 200%;
+  padding: 0;
+
+  li {
+    display: inline;
+
+    button {
+      border-bottom: 6px solid var(--mainbackground);
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .selected {
+      border-bottom: 6px solid var(--primary);
+      margin-bottom: 0;
+    }
+
+  }
+}
+
+/* ALERT */
+.alert {
+  margin-top: 20px;
+}
+
+.alert-success {
+  background-color: var(--lightblue);
+  border-color: var(--darkblue);
+  color: var(--darkblue);
+
+  .close {
+    color: var(--darkblue);
+    opacity: 1;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--strongest);
+    }
+  }
+
+  a {
+    color: var(--strongest);
+    text-decoration: underline;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+}
+
+.alert-warning {
+  background-color: var(--lightgold);
+  border-color: var(--darkgold);
+  color: var(--darkgold);
+
+  .close {
+    color: var(--darkgold);
+    opacity: 1;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--strongest);
+    }
+  }
+
+  a {
+    color: var(--strongest);
+    text-decoration: underline;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+}
+
+.alert-danger {
+  background-color: var(--lightred);
+  border-color: var(--darkred);
+  color: var(--darkred);
+
+  .close {
+    color: var(--darkred);
+    opacity: 1;
+    text-decoration: none;
+
+    &:hover {
+      color: var(--strongest);
+    }
+  }
+
+  a {
+    color: var(--strongest);
+    text-decoration: underline;
+
+    &:hover {
+      text-decoration: none;
+    }
+  }
+}
+
+.hover-danger:hover {
+  background-color: var(--lightred);
+  border-color: var(--darkred);
+  color: var(--strongest);
+}
+
+.hover-warning:hover {
+  background-color: var(--lightgold);
+}
+
+.hover-action:hover {
+  color: var(--primary);
+  transition: color 0.8s ease;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+.separator {
+  border-bottom: 1px solid var(--firstlevel);
+  margin: 20px 0;
+  padding-bottom: 30px;
+}
+
+/* beta ribbon */
+.beta {
+  background: var(--primary);
+  border-radius: 5px;
+  color: var(--white);
+  display: inline-block;
+  font-family: sans-serif;
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 80%;
+  padding: 4px;
+  position: relative;
+  text-align: center;
+  text-transform: uppercase;
+  top: -12px;
+  transform: rotate(35deg);
+}
+
+#body_view {
+  /* https://developer.mozilla.org/en-US/docs/Web/CSS/contain */
+  /* we cannot apply strict here */
+  contain: content;
+
+  img {
+    max-height: 100%;
+    max-width: 100%;
+  }
+
+  p {
+    // break super long words, see #4169
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+}
+
+/* fix for big images uploaded in the text */
+.entity .txt {
+  overflow: auto;
+}
+
+.table {
+  /* display borders correctly, keeps cells flush without extra spacing. See #5681  */
+  border-collapse: separate;
+  border-spacing: 0;
+
+  span,
+  thead,
+  th,
+  td {
+    color: var(--mediumstrong);
+  }
+
+  td,
+  th {
+    border-color: var(--secondary-muted);
+  }
+
+  thead {
+    background-color: var(--white);
+    position: sticky;
+    top: 0;
+
+    /* thead with no filter on top need to have this class to have a top border */
+    /* stylelint-disable-next-line selector-no-qualifying-type */
+    &.with-top {
+      border-top: 1px solid var(--firstlevel);
+    }
+
+    th {
+      border-bottom: var(--firstlevel) 1px solid;
+    }
+  }
+
+  tbody {
+    background-color: var(--white);
+
+    /* stylelint-disable-next-line selector-no-qualifying-type */
+    &.bgnd-transparent {
+      background-color: var(--mainbackground);
+    }
+  }
+
+  td {
+    width: fit-content;
+
+    img {
+      height: auto;
+      max-width: 100%;
+      object-fit: contain;
+    }
+  }
+
+  th {
+    white-space: nowrap;
+
+    &:not(:last-child) {
+      border-right: var(--firstlevel) 1px solid;
+    }
+  }
+
+  .no-wrap {
+    white-space: nowrap;
+  }
+}
+
+/* zebra only when the actual table does not have inline background-color */
+table:not([style*='background-color']) > tbody > tr:nth-child(even) {
+  background-color: var(--white);
+}
+
+table:not([style*='background-color']) > tbody > tr:nth-child(odd) {
+  background-color: var(--mainbackground);
+}
+
+/* the first row does not need a border-top */
+tr:first-child td {
+  border-top-width: 0;
+}
+
+/* enable responsive tables while preserving structure via horizontal scrolling (phone, tablets, etc.) */
+.table-container {
+  overflow-x: auto;
+}
+
+/* TABLE SHOW MODE */
+.item-table {
+  .title {
+    font-size: 100%;
+  }
+
+  .item-date,
+  .item-owner {
+    white-space: nowrap;
+  }
+
+  .item-next {
+    max-width: 14ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tags {
+    max-width: 20ch;
+    overflow-wrap: normal;  // don't force per-character wrapping
+    word-break: keep-all;
+  }
+
+  .item-rating {
+    min-width: 66px;
+    text-align: center;
+  }
+}
+
+/* table in view mode, always add borders, see #4436 */
+#body_view {
+  table,
+  td,
+  tr {
+    border: 1px solid var(--secondary-muted);
+  }
+}
+
+/* required labels/input */
+.required-label::after {
+  color: var(--dangerred);
+  content: ' *';
+}
+
+.margin-1px {
+  margin: 1px;
+}
+
+.vertical-separator {
+  border-right: 1px solid var(--secondlevel);
+  height: 1.8rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+
+  /* separator disappears on small screens */
+  @media (max-width: 550px) {
+    border-right: 0;
+    margin-left: 0;
+    margin-right: 0.5rem;
+  }
+}
+
+/* NOTIFICATIONS */
+
+/* container for notifications in top left of screen */
+#overlay-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  left: 10px;
+  position: fixed;
+  top: 10px;
+  z-index: 19850;
+}
+
+/* class for a single notification */
+.overlay {
+  border-radius: 5px;
+  display: flex;
+  line-height: 50px;
+  opacity: 0.9;
+  padding: 0 10px;
+  // keep this above 1200 for tinymce fullscreen mode
+  // see #2419
+  // and over 15000 for open vector editor fullscreen mode
+  z-index: 19850;
+}
+
+.overlay p {
+  color: var(--chrome-fg);
+  font-weight: bold;
+  margin-bottom: 0;
+}
+
+.overlay-success {
+  animation: slideInOut 3.5s ease-in-out forwards;
+  background-color: var(--primary);
+}
+
+.overlay-error,
+.overlay-warning {
+  animation: slideIn 3.5s ease-in forwards;
+
+  span > i {
+    color: var(--strongest);
+  }
+
+  &:hover {
+    span > i {
+      color: var(--darkred);
+    }
+  }
+}
+
+.overlay-error {
+  background-color: var(--lightred);
+}
+
+.overlay-warning {
+  background-color: var(--lightgold);
+}
+
+.overlay-error p,
+.overlay-warning p {
+  color: var(--strongest);
+}
+
+.opacity-8 {
+  opacity: 0.8;
+}
+
+.full-screen-overlay {
+  background: rgba(0, 0, 0, 0.8);
+  height: 100vh;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100vw;
+  z-index: 1337;
+
+  p {
+    color: var(--white);
+    left: 50%;
+    opacity: 1;
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1342;
+  }
+}
+
+/* ENTITIES */
+.entity {
+  background-color: var(--white);
+  border: 1px solid var(--firstlevel);
+  border-left: 6px solid var(--left-color);
+  border-radius: 5px;
+  margin: 5px auto;
+  max-width: 100%;
+  min-width: 100%;
+  opacity: var(--opacity);
+  padding: 5px 10px 5px 5px;
+
+  &:hover {
+    background-color: var(--highlighted);
+  }
+
+  img {
+    max-width: 100%;
+  }
+
+  p {
+    margin-bottom: 0;
+  }
+
+  .fa-comments,
+  .fa-paperclip,
+  .fa-tags {
+    color: var(--secondlevel);
+  }
+
+  .fa-tags {
+    margin-top: 3px;
+  }
+
+  .owner {
+    a {
+      color: var(--medium);
+
+      &:hover {
+        color: var(--secondlevel);
+      }
+    }
+  }
+
+  .left-icon {
+    &.bgnd-blue {
+      background-color: var(--primary);
+
+      &:hover {
+        background-color: var(--secondlevel);
+      }
+    }
+
+    &.bgnd-dark {
+      background-color: var(--medium);
+
+      &:hover {
+        background-color: var(--secondlevel);
+      }
+    }
+  }
+}
+
+.entity-template {
+  border: 1px dashed var(--firstlevel);
+}
+
+.entity-deleted-overlay {
+  align-items: center;
+  backdrop-filter: blur(1px);
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: center;
+  left: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 19850;
+}
+
+/* SIDE PANEL */
+.sidepanel-btn {
+  border-radius: 0 5px 5px 0;
+  padding: 10px 5px;
+
+  &.sidepanel-closed {
+    background-color: var(--firstlevel);
+    border: 1px solid var(--firstlevel);
+    box-shadow: -1rem 0 0 var(--firstlevel);
+
+    i {
+      color: var(--strongest);
+    }
+
+    &:hover {
+      background-color: var(--secondlevel);
+    }
+  }
+
+  &.sidepanel-opened {
+    background-color: var(--mediumstrong);
+    box-shadow: -1rem 0 0 var(--mediumstrong);
+
+    i {
+      color: var(--mainbackground);
+    }
+
+    &:hover {
+      background-color: var(--medium);
+    }
+  }
+}
+
+.list-group-item {
+  background-color: var(--white);
+  border: 1px solid var(--secondary);
+}
+
+.side-panel {
+  background: var(--mediumstrong);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+  color: var(--white);
+  height: 100%;
+  left: 0;
+  overflow: hidden;
+  overflow-y: auto;
+  padding-top: 10px;
+  position: fixed;
+  top: 0;
+  width: max(24%, 330px);
+
+  .fas,
+  .far,
+  h3 {
+    color: var(--white);
+  }
+
+  .btn-primary {
+    .fas,
+    .far {
+      color: inherit;
+    }
+  }
+
+  .list-group-item {
+    background-color: var(--white);
+    border: 1px solid var(--chrome-muted);
+    color: var(--mediumstrong);
+
+    .fas {
+      color: var(--mediumstrong);
+    }
+  }
+
+  .side-panel-item {
+    padding: 5px 0 5px 10px;
+
+    /* Favtags will show up as selected */
+    &.selected {
+      background-color: var(--primary);
+      color: var(--chrome-fg);
+      cursor: initial;
+    }
+
+    &:hover:not(.selected) {
+      background-color: var(--disabled);
+    }
+  }
+
+  /* Make the titles that you can click on to toggle the steps visibly clickable */
+  [data-action='toggle-next']:hover {
+    background-color: var(--secondary);
+  }
+}
+
+.item-info {
+  padding-left: 20px;
+}
+
+/* for steps highlight, because .active only works on list-group-item */
+.highlighted {
+  border: 1px solid var(--primary);
+}
+
+.item a p:hover {
+  color: var(--primary);
+}
+
+.box {
+  border: 1px solid var(--firstlevel);
+  border-radius: 5px;
+  margin-top: 10px;
+  overflow: auto;
+  padding: 20px;
+
+  &.sm {
+    padding: 12px;
+  }
+}
+
+.box section {
+  margin-bottom: 15px;
+}
+
+/* EXPERIMENT STEPS */
+/* this is a hack to make the steps that are long work fine in multiline
+the form-control fails to do that so we do the border ourselves */
+.step-static {
+  border: 1px solid var(--secondary);
+  border-radius: 0 4px 4px 0;
+}
+
+.finished {
+  color: var(--green);
+}
+
+.draggable {
+  cursor: move;
+}
+
+/* fix for bootstrap's thumbnail class */
+.thumbnail {
+  overflow: hidden;
+  overflow-wrap: break-word;
+
+  .dropdown button {
+    position: relative;
+    z-index: 10;
+  }
+}
+
+.thumb {
+  font-size: 100px !important;
+  height: 100px;
+  min-height: 50px;
+  min-width: 50px;
+  width: 100px;
+}
+
+/* highlight on hover: for editable/malleable elements
+ * it's $primary but less opaque
+ */
+.hl-hover:hover {
+  background-color: rgba(41, 174, 185, 0.5);
+}
+
+.hl-hover-superlight:hover {
+  background-color: var(--superlight);
+
+  i {
+    color: var(--strongest);
+  }
+
+}
+
+/* COMMENTS */
+.comment-header {
+  background-color: var(--firstlevel);
+}
+/* END COMMENTS */
+
+@mixin breakable {
+  hyphens: auto;
+  line-height: 110%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.breakable {
+  @include breakable;
+}
+
+/* links in tables (view mode) often contain long-name files. See #6137 */
+#body_view a {
+  @include breakable;
+}
+
+/* TITLE */
+/* add several rules for the word-wrap, see https://stackoverflow.com/a/36555643 */
+.title {
+  @include breakable;
+  font-size: 160%;
+
+  /* titles inside item-table need to stay readable */
+  .item-table & {
+    font-size: 100%;
+    hyphens: none;
+    word-break: normal;
+  }
+
+  a {
+    color: var(--mediumstrong);
+
+    &:hover {
+      color: var(--strongest);
+    }
+  }
+}
+
+/* for icons such as pin, need important to override default icon color */
+.color-weak {
+  color: var(--secondlevel) !important;
+}
+
+.color-disabled {
+  color: var(--disabled) !important;
+}
+
+.color-white {
+  color: var(--white) !important;
+}
+
+.color-danger {
+  color: var(--darkred) !important;
+}
+
+.border-danger {
+  border: 1px solid var(--lightred) !important;
+}
+
+.color-warning {
+  color: var(--darkgold) !important;
+}
+
+.lh-150 {
+  line-height: 150%;
+}
+
+.lh-normal {
+  line-height: normal;
+}
+
+.togglable-section-title {
+  color: var(--medium);
+  font-size: 100%;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Category and Status buttons */
+.catstat-btn {
+  border: 0;
+  border-radius: 0.25rem;
+  font-size: 75%;
+  font-weight: bold;
+  line-height: normal;
+  padding: 0.25rem;
+  text-transform: uppercase;
+  white-space: normal;
+
+  /* Only Category */
+  &.category-btn {
+    // keep the category background but with less opacity to make it readable in all circumstances, even white or black
+    background-color: color-mix(in srgb, var(--bg) 40%, transparent);
+    color: var(--mediumstrong);
+
+    &:hover {
+      background-color: var(--bg);
+      color: var(--chrome-fg);
+    }
+  }
+
+  /* Only Status */
+  &.status-btn {
+    background-color: var(--firstlevel);
+    color: var(--mediumstrong);
+
+    &:hover {
+      background-color: var(--secondlevel);
+      color: var(--chrome-bg);
+    }
+
+    i {
+      color: var(--bg);
+    }
+  }
+}
+
+.smallgray {
+  color: var(--medium);
+  font-size: 80%;
+}
+
+.small {
+  font-size: 80%;
+}
+
+.text-big {
+  font-size: 120%;
+}
+
+/* ucp.php */
+#currpass {
+  background-color: var(--lightblue);
+  border: 1px solid var(--primary);
+}
+
+.edit-mode-label {
+  min-width: 93px;
+
+  @media (max-width: 992px) {
+    min-width: 0;
+  }
+}
+
+/* elabid */
+.elabid {
+  color: var(--medium);
+  overflow-wrap: break-word;
+}
+
+/* TAGS */
+.tag {
+  background-color: var(--firstlevel);
+  /* selected tag will get orange border */
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--mediumstrong);
+  font: bold 80% Verdana, Arial, Helvetica, sans-serif;
+  padding: 2px 5px;
+
+  &:hover {
+    background-color: var(--mediumstrong);
+    color: var(--white) !important;
+  }
+
+  &.favorite {
+    background-color: color-mix(in srgb, var(--gold) 50%, transparent);
+  }
+}
+
+/* make the details shrink-to-fit and establish a positioning context */
+.suggested-tags {
+  display: inline-block;
+  position: relative;
+}
+
+/* replace flex container with a responsive grid */
+.suggested-tags-menu {
+  background: var(--white);
+  border-radius: 5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  display: grid;
+  gap: 0.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  margin-top: 6px;
+  max-width: 40rem;
+  padding: 0.5rem;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  z-index: 100;
+}
+
+.box {
+  background-color: var(--white);
+}
+
+.border-secondlevel {
+  border-color: var(--secondlevel);
+}
+
+.bg-firstlevel {
+  background-color: var(--firstlevel);
+}
+
+/* print only the main div */
+@media print {
+  /* overwrite bootstrap defaults
+     * https://stackoverflow.com/a/53232790
+     */
+  body {
+    min-width: 0 !important;
+  }
+
+  /* don't print all that stuff */
+  nav,
+  footer,
+  #menu,
+  #filesDiv,
+  #commentsDiv,
+  #withSelected,
+  .item-info > .clickable,
+  .real-container > span,
+  .real-container > hr,
+  .real-container > form,
+  .col-md-10,
+  .col-md-2,
+  .smallgray,
+  .page-buttons {
+    display: none !important;
+  }
+
+  .container {
+    min-width: 0 !important;
+    width: auto;
+  }
+
+  .real-container {
+    margin: auto;
+    padding: 0;
+  }
+
+  .real-container::after {
+    content: 'Powered by eLabFTW ❤ www.elabftw.net';
+    display: block;
+    margin-top: 0.5rem;
+    text-align: center;
+  }
+
+  .real-container .row:last-child {
+    display: block;
+    margin-top: 0.5rem;
+  }
+
+  .real-container .row:last-child .col-6 {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .elabid {
+    text-align: left;
+  }
+
+  .title,
+  .item-next,
+  .item-info {
+    padding-left: 5px !important;
+  }
+
+  .title a {
+    text-decoration: none !important;
+  }
+
+  .entity {
+    background-color: var(--white);
+    font-size: 14px;
+    line-height: normal;
+    margin: 0;
+    margin-top: 2px;
+    padding: 5px;
+  }
+
+  #itemList {
+    display: block;
+  }
+
+  #itemList > div {
+    display: block;
+    max-width: 95% !important;
+  }
+
+  section > div {
+    margin: 0 !important;
+    padding: 5px;
+    width: 100% !important;
+  }
+
+  #body_view {
+    border: 0;
+  }
+
+  #itemList section {
+    break-inside: avoid;
+  }
+}
+
+/* icon overlay for uploaded file icons */
+.icon-overlay {
+  display: block;
+  position: relative;
+}
+
+.icon-overlay:hover::after {
+  background-color: var(--medium);
+  color: var(--white);
+  display: block;
+  font-family: 'Font Awesome 6 Free';
+  font-size: 3em;
+  font-weight: 900;
+  left: 50%;
+  position: absolute;
+  text-align: center;
+  top: 37px;
+  transform: translateX(-50%);
+  width: 66px;
+}
+
+// edit-overlay
+.icon-overlay.edit-overlay:hover::after {
+  content: '\f304';
+}
+// eye-overlay
+.icon-overlay.eye-overlay:hover::after {
+  content: '\f06e';
+}
+
+/* fix the canvas for 3Dmoljs uploaded files */
+/* stylelint-disable-next-line selector-class-pattern */
+.viewer_3Dmoljs {
+  height: 250px;
+  position: relative;
+  width: 100%;
+}
+
+/* Dropzone is the file uploader */
+.dropzone {
+  background-color: var(--white);
+  border: 3px dashed var(--secondlevel);
+
+  &:hover {
+    border: 3px dashed var(--medium);
+  }
+}
+
+.clickable:hover,
+.editable:hover,
+[data-action] {
+  cursor: pointer;
+}
+
+/* trash icon is red on hover */
+.fa-trash-alt:hover {
+  color: var(--darkred);
+  transition: color 0.8s ease;
+}
+
+/*
+ * font awesome icons color
+ * don't register clicks with the fontawesome icons
+ * this way the click event is registered by the parent and all is well
+ */
+.far,
+.fas,
+.fab {
+  color: var(--medium);
+  pointer-events: none;
+}
+
+.fa-bell.active {
+  color: var(--primary);
+}
+
+/* caption for tinymce */
+.image {
+  background: var(--superlight);
+  border: 1px solid var(--medium);
+  display: inline-block;
+  margin: 0 2px 0 1px;
+}
+
+.image img {
+  margin: 8px 8px 0;
+}
+
+.image figcaption,
+figure figcaption {
+  margin: 6px 8px;
+  text-align: center;
+}
+
+/* make the markdown editor full width */
+.markdown-textarea {
+  width: 100%;
+}
+
+/* styling TinyMCE preview */
+/* stylelint-disable-next-line selector-class-pattern -- permit selecting classes with underscores */
+.tox-dialog__header:has(+ .tox-dialog__content-js .mce-preview-body) {
+  padding: 8px 16px 16px !important;
+}
+
+/* stylelint-disable-next-line selector-class-pattern -- permit selecting classes with underscores */
+.tox-dialog__body-content:has(.mce-preview-body) {
+  padding: 0 16px 16px !important;
+}
+
+/* setting the height as 'auto' results in the footer element being rendered below the preview popup */
+/* stylelint-disable-next-line selector-class-pattern -- permit selecting classes with underscores */
+.tox-dialog__content-js:has(.mce-preview-body) {
+  height: 0 !important;
+}
+
+/* stylelint-disable-next-line selector-no-qualifying-type */
+input[type='color'] {
+  padding: 5px 10px;
+}
+
+.user-badge {
+  background-color: var(--lightblue);
+  border: 1px solid var(--firstlevel);
+  border-radius: 0.25rem;
+  color: var(--mediumstrong);
+  padding: 4px 8px;
+}
+
+.admin-badge {
+  background-color: var(--lightblue);
+  border: 1px solid var(--gold);
+  border-radius: 0.25rem;
+  padding: 4px 8px;
+  position: relative;
+
+  &::before {
+    color: var(--dangerred);
+    content: 'Admin';
+    font-size: 75%;
+    left: 0;
+    position: absolute;
+    top: -16px;
+  }
+}
+
+.increased-spacing {
+  letter-spacing: 0.1rem;
+}
+
+.input-group-text {
+  background-color: transparent;
+  border: 1px solid var(--secondary-muted);
+  color: inherit;
+
+  &:hover {
+    background-color: var(--firstlevel);
+    border-color: var(--secondlevel);
+  }
+}
+
+/* bring the search and user menu a bit more on the left
+ * this is the only way I found that works
+ * adding row/columns will mess up the left alignment of the navbar
+ */
+#main-nav {
+  background-color: inherit;
+
+  @media (min-width: 992px) {
+    height: 43px;
+  }
+
+  /* prevent wrap on whitespace for elements of the menu so it doesn't take two lines when screen size is getting small */
+  .nav-item {
+    white-space: nowrap;
+  }
+}
+
+/* to make the pie smaller */
+.pie-chart-container {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 360px;
+  padding: 5%;
+}
+
+/* pure css pie chart based on: https://codepen.io/chriscoyier/pen/RPLqMg */
+.pie-chart {
+  background: conic-gradient(var(--pie-data));
+  border-radius: 50%;
+  height: 0;
+  padding-right: 20px;
+  padding-top: 100%;
+  width: 100%;
+}
+
+.pie-percent {
+  background: var(--bg);
+  border-radius: 5px;
+  color: var(--white);
+  padding: 10px;
+  text-align: center;
+  text-shadow: 0 0 1px var(--strongest);
+}
+
+.fa-2x {
+  font-size: 1.6em;
+}
+
+/* fix border radius for custom-select. brl = border radius left */
+.brl-none {
+  border-bottom-left-radius: 0;
+  border-top-left-radius: 0;
+}
+
+/* fix border radius for custom-select. brr = border radius right */
+.brr-none {
+  border-bottom-right-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* SCROLL TO TOP OF PAGE BUTTON */
+.floating-middle-right {
+  position: fixed;
+  right: 0.8%;
+  top: calc(100vh - 15rem);
+}
+
+#backToTopButton {
+  transition: all 0.5s ease;
+}
+
+#scrollTopBtnAnchor {
+  bottom: 0;
+  position: absolute;
+}
+/* END BACK TO TOP BUTTON */
+
+.border-white {
+  border: 1px solid var(--mainbackground);
+}
+
+/* notifications */
+.notification {
+  border-top: 1px solid var(--mainbackground);
+  color: var(--medium);
+
+  span {
+    color: var(--mediumstrong);
+  }
+
+  .relative-moment {
+    font-size: 80%;
+  }
+
+  &[data-ack='0'] {
+    background-color: var(--primary);
+
+    span {
+      color: var(--chrome-fg);
+    }
+  }
+}
+
+/* The switch - the box around the slider */
+.switch {
+  display: inline-block;
+  height: 22px;
+  position: relative;
+  width: 42px;
+
+  /* Hide default HTML checkbox */
+  input {
+    height: 0;
+    opacity: 0;
+    width: 0;
+  }
+
+  /* align the slider to the label in ucp */
+  &.ucp-align {
+    margin-top: 0.5rem;
+  }
+
+  &.disabled {
+    opacity: 0.7;
+
+    .slider {
+      cursor: default;
+    }
+  }
+}
+
+/* The slider */
+.slider {
+  background-color: var(--secondary);
+  border-radius: 34px;
+  bottom: 0;
+  cursor: pointer;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: 355ms;
+
+  &::before {
+    background-color: var(--chrome-fg);
+    border-radius: 50%;
+    bottom: 2px;
+    content: '';
+    height: 18px;
+    left: 2px;
+    position: absolute;
+    transition: 355ms;
+    width: 18px;
+  }
+}
+
+input:checked + .slider {
+  background-color: var(--primary);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 8px var(--primary);
+}
+
+input:checked + .slider::before {
+  transform: translateX(20px);
+}
+
+/* :user-invalid only activates after the user interacted with an input
+ * https://developer.mozilla.org/en-US/docs/Web/CSS/:user-invalid
+ */
+input:user-invalid {
+  border: 1px solid var(--dangerred);
+  box-shadow: 0 0 8px var(--dangerred);
+}
+
+.section-title {
+  background-color: var(--firstlevel);
+}
+
+/* PROFILE page */
+.counter {
+  color: var(--medium);
+}
+
+/* see Enums/State */
+.state-indicator {
+  /* error */
+  &[data-state='6'] {
+    color: var(--darkred);
+  }
+  /* processing */
+  &[data-state='5'] {
+    animation: pulse 2s infinite;
+    color: var(--orange);
+  }
+  /* pending */
+  &[data-state='4'] {
+    color: var(--mediumstrong);
+  }
+  /* normal */
+  &[data-state='1'] {
+    color: var(--green);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    color: var(--brightorange); /* Bright orange */
+  }
+
+  50% {
+    color: var(--lessbrightorange); /* Less bright orange */
+  }
+}
+
+#exclusiveEditModeBtn {
+  span {
+    height: 1rem;
+    line-height: 1rem;
+    width: 1.25rem;
+
+    i:first-child {
+      top: -1.7px;
+    }
+
+    .fa-lock-open {
+      left: -2px;
+    }
+
+    .fa-lock {
+      left: -4px;
+    }
+
+    .fa-pen-nib {
+      --fa-rotate-angle: 45deg;
+      color: var(--primary);
+      left: 2px;
+      top: 4px;
+    }
+  }
+}
+
+#ketcher-root {
+  display: flex;
+  flex-direction: column;
+  width: 100%;   /* Make the editor fill the entire width */
+}
+
+.ketcher-editor-container {
+  display: flex;
+  /*flex-grow: 1; /* Make the editor grow to fill available space */
+  flex: 0 1 620px;
+  flex-direction: column;
+}
+
+.ketcher-editor-container .editor {
+  /*flex-grow: 1; /* Allow the drawing area to take up all remaining space */
+  flex: 0 1 620px;
+  min-height: 500px; /* Ensure a minimum height */
+}
+
+.ketcher-editor-container .toolbar {
+  flex-shrink: 0; /* Ensure toolbars do not shrink */
+}
+
+#storageDiv {
+  details,
+  summary {
+    margin: 10px 0;
+  }
+}
+
+/* top right button */
+.initials {
+  color: var(--secondlevel);
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* opencloning iframe */
+#syc-root {
+  height: 87vh;
+  width: 100%;
+
+  iframe {
+    height: 100%;
+    width: 100%;
+  }
+}
+
+.round-spot {
+  border-radius: 50%;
+  display: inline-block;
+  height: 1em;
+  line-height: 1;
+  vertical-align: middle;
+  width: 1em;
+}
+
+.round-spot-ghost {
+  border: 1px dashed var(--medium);
+}
+
+.table-bordered,
+.table-bordered td,
+.table-bordered th,
+.fc-event {
+  border: 1px solid var(--secondary-muted);
+}
+
+.calendar-event-hover {
+  box-shadow: 5px 4px 4px var(--medium) !important;
+}
+
+.calendar-event-disabled {
+  opacity: 0.5;
+}
+
+.color-input {
+  min-width: 116px;
+}
+
+.infotip {
+  display: inline-block;   // shrink-wrap to content
+  position: relative;
+
+  &-icon {
+    cursor: help;          // help cursor on hover
+  }
+
+  &-text {
+    background: rgba(0, 0, 0, 0.9);
+    border-radius: 0.25em;
+    color: var(--chrome-fg);
+    left: 200px;
+    line-height: 1.3;
+    margin: 0;
+    max-width: 900px;
+    min-width: 400px;
+    opacity: 0;
+    padding: 0.5em;
+    pointer-events: none;  // doesn’t block mouse events
+    position: absolute;
+    text-align: start;
+    top: 100%;             // just below the icon
+    transform: translateX(-50%);
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    visibility: hidden;
+    z-index: 1985;
+  }
+
+  &:hover {
+    .infotip-text {
+      opacity: 1;
+      visibility: visible;
+    }
+  }
+}
+
+.vertically-limited {
+  max-height: 500px;
+  overflow: scroll;
+}
+
+#metadataDiv {
+  textarea,
+  input {
+    &:required:invalid {
+      background-color: var(--mediumyellow);
+      color: var(--chrome-bg);
+    }
+  }
+}
+
+// disable touch action for doodle canvas
+#doodleCanvas {
+  touch-action: none;
+}
+
+// on sysconfig page
+.logo-preview svg {
+  height: 100px;
+  width: 300px;
+}
+
+.filter-menu {
+  min-width: 18rem;
+}
+
+.filter-menu .ts-wrapper {
+  width: 100%;
+}
+
+.filter-menu .ts-control {
+  min-height: 2.25rem;
+}
+
+.owner {
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 1px;
+}
+
+.active-filter-badge {
+  background-color: var(--firstlevel);
+  border: 1px solid var(--secondlevel);
+  border-radius: 5px;
+  padding: 0.25rem;
+}
+
+.malleable {
+  cursor: pointer;
+  display: inline-block;
+  padding-right: 1.2rem;
+  position: relative;
+
+  &::after {
+    content: '\f044'; // fa-pen-to-square
+    display: inline-block;
+    font: var(--fa-font-solid);
+    font-size: 0.8rem;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    text-rendering: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: opacity 0.15s ease;
+  }
+
+  &:hover::after {
+    opacity: 1;
+  }
+}

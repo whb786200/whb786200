@@ -1,0 +1,2 @@
+// Deprecated. All modules live in 'server/modules'
+apply from: 'all.gradle'

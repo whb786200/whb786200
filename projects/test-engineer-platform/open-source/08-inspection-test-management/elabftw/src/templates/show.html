@@ -1,0 +1,689 @@
+{% extends 'base.html' %}
+
+{% block title %}
+<div class='d-flex align-content-center'>
+  <h1 id='pageTitle' {% if hideTitle %}hidden{% endif %}>{{ pageTitle }}</h1>
+  <div class='ml-auto'>
+    {% include 'create-new.html' %}
+  </div>
+</div>
+{% endblock %}
+
+{% block body %}
+  {% include 'search-help-modal.html' %}
+  {% include 'show-view-edit.html' %}
+  {% include 'request-actions-show.html' %}
+
+  <hr>
+
+  {# SEARCH BAR #}
+  <div class='d-flex'>
+    {% set pageName = scriptName|replace({'.php': ''}) %}
+    {% set searchTarget = pageName %}
+    {% if pageName == 'database' %}
+      {% set searchTarget = 'resources'|trans %}
+    {% endif %}
+
+    <form
+      id='mainSearchForm'
+      aria-label='{{ 'Search %s'|trans|format(searchTarget) }}'
+      class='flex-fill'
+      method='get'
+    >
+      <div
+        id='searchBar'
+        data-name='q'
+        data-value='{{ App.Request.query.get('q') ? App.Request.query.get('q')|trim|e('html_attr') : '' }}'
+        data-placeholder='{{ 'Search'|trans }}'
+        data-aria-label='{{ 'Search'|trans }}'
+        data-button-label='{{ 'Search'|trans|e('html_attr') }}'
+      >
+        <div class='input-group w-100 search-bar-input-group search-bar-fallback'>
+          <input
+            id='extendedArea'
+            name='q'
+            type='text'
+            class='form-control'
+            placeholder='{{ 'Search'|trans }}'
+            aria-label='{{ 'Search'|trans }}'
+            spellcheck='false'
+            value='{{ App.Request.query.get('q') ? App.Request.query.get('q')|trim|e('html_attr') : '' }}'
+          />
+          <div class='input-group-append'>
+            <button
+              class='btn btn-secondary'
+              type='submit'
+              aria-label='{{ 'Search'|trans }}'
+              title='{{ 'Search'|trans }}'
+            >
+              <i class='fas fa-magnifying-glass'></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <div>
+      <button
+        type='button'
+        class='btn btn-neutral ml-2'
+        aria-label='{{ 'Show full syntax'|trans }}'
+        title='{{ 'Show full syntax'|trans }}'
+        data-action='toggle-modal'
+        data-target='advancedSearchModal'
+      >
+        <i class='color-medium fa-regular fa-circle-question'></i>
+      </button>
+      {# TOGGLE MORE FILTERS BUTTON #}
+      <button class='btn btn-secondary btn ml-1' type='button' data-action='toggle-next' data-toggle-target='filtersDiv' data-closed-icon='fa-filter' data-opened-icon='fa-xmark' aria-label='{{ 'Toggle filters'|trans }}' aria-expanded='false' aria-controls='filtersDiv' title='{{ 'Show more filters'|trans }}'>
+        <i class='fas fa-filter'></i>
+      </button>
+    </div>
+  </div>
+
+  {# END SEARCH BAR #}
+
+  {# QUERY FILTERS #}
+  <div class='d-flex flex-column'>
+
+  {# FIRST LINE: ALWAYS ON FILTERS: CATEGORY, STATUS, OWNER, TAGS #}
+    <div class='d-flex form-group form-inline'>
+      <form id='queryForm' aria-label='{{ 'Query filters'|trans }}'>
+        <input type='hidden' name='q' value='{{ DisplayParams.queryString|e('html_attr') }}' />
+        {% if App.Request.query.get('related') %}
+          <input type='hidden' name='related' value='{{ App.Request.query.get('related')|number_format }}' />
+          <input type='hidden' name='related_origin' value='{{ App.Request.query.getAlpha('related_origin') }}' />
+        {% endif %}
+        {# WCAG/h32 - form needs a submit button #}
+        <button type='submit' hidden></button>
+      </form>
+
+    {# END ALWAYS VISIBLE FILTERS #}
+    </div>
+
+    {# START HIDDEN FILTERS #}
+    <div id='filtersDiv' hidden data-save-hidden='filtersDiv' class='form-group form-inline'>
+      {# METADATA SEARCH #}
+      <div class='d-flex'>
+        <div class='input-group d-flex flex-nowrap'>
+          {% if App.devMode -%}
+            <!-- [html-validate-disable prefer-native-element: suppress errors from tom-select] -->
+          {%- endif %}
+          <select
+            aria-label='{{ 'Name of field'|trans }}'
+            class='form-control filterHelper'
+            data-filter='extrafield'
+            id='metakey'
+            name='metakey'
+          >
+            <option value='' disabled>{{ 'Name of field'|trans }}</option>
+            <option value='**' {{- '**' == App.Request.query.get('metakey') ? ' selected' }}>{{ 'All fields'|trans }}</option>
+            {% for metakey in metakeyArrForSelect %}
+              <option value='{{ metakey }}' {{- metakey == App.Request.query.get('metakey') ? ' selected' }}>{{ metakey }}</option>
+            {% endfor %}
+          </select>
+          {% if App.devMode -%}
+            <!-- [html-validate-enable prefer-native-element: suppress errors from tom-select] -->
+          {%- endif %}
+          <div class='input-group-text px-1 brl-none brr-none' style='margin-left:-1px;margin-right:-1px;'>:</div>
+          <input
+            aria-label='{{ 'Value'|trans }}'
+            class='form-control filterHelper'
+            data-filter='extrafield'
+            id='metavalue'
+            name='metavalue'
+            placeholder='{{ 'Value'|trans }}'
+            type='text'
+            value='{{ Request.query.get('metavalue') != '' ? Request.query.get('metavalue') }}'
+          />
+        </div>
+        <div id='autocompleteAnchorDiv_extra_fields_keys'></div>
+      </div>
+          <!-- TODO add to help modal >
+          <p class='mt-1 text-muted'>{{ "Tip: you can use '%' as wildcard in value"|trans }}</p-->
+          {# METADATA SEARCH END #}
+
+      {# GROUPS filter: disabled because not working FIXME #}
+      {#
+      <!--select name='group' class='mx-1 form-control filterHelper filterAuto' aria-label='{{ 'Filter group'|trans }}'>
+        <option value='' data-action='clear'>{{ 'Select group'|trans }}</option>
+        {% for group in scopedTeamgroupsArr %}
+          <option value='{{ group.name|e('html_attr') }}' {{- Request.query.get('searchonly') == 'group:' ~ group ? ' selected' }}>{{ group.name }}</option>
+        {% endfor %}
+      </select-->
+      #}
+
+      {# VISIBILITY filter #}
+      <select name='visibility' class='mx-1 form-control filterHelper' aria-label='{{ 'Filter visibility'|trans }}'>
+        <option value=''>{{ 'Filter visibility'|trans }}</option>
+        {% for vis in visibilityArr %}
+        <option value='{{ vis|e('html_attr') }}' {{ App.Request.query.get('q') == 'visibility:"' ~ vis|raw ~ '"' ? ' selected' }}>
+          {{ vis }}</option>
+        {% endfor %}
+      </select>
+
+      <input type='hidden' name='mode' value='show' />
+
+      <div>
+        {# STATE filter #}
+        {% include 'select-state.html' %}
+
+        {# LOCK #}
+        <select name='locked' aria-label='{{ 'Select lock status'|trans }}' class='form-control filterHelper'>
+          <option value='' data-action='clear'>{{ 'Select lock status'|trans }}</option>
+          <option value='1' {{- Request.query.get('locked') == 'yes' ? ' selected' }}>{{ 'Yes'|trans|lower }}</option>
+          <option value='0' {{- Request.query.get('locked') == 'no' ? ' selected' }}>{{ 'No'|trans|lower }}</option>
+        </select>
+        {# END LOCK #}
+
+        {# TIMESTAMPED #}
+        <select aria-label='{{ 'Timestamped'|trans }}' name='timestamped' class='form-control filterHelper' data-filter='timestamped'>
+          <option value='' data-action='clear'>{{ 'Select timestamp status'|trans }}</option>
+          <option value='1' {{- Request.query.get('timestamped') == 'yes' ? ' selected' }}>{{ 'Yes'|trans|lower }}</option>
+          <option value='0' {{- Request.query.get('timestamped') == 'no' ? ' selected' }}>{{ 'No'|trans|lower }}</option>
+        </select>
+        {# END TIMESTAMPED #}
+
+        {# RATING #}
+        <select id='rating' name='rating' data-filter='rating' class='form-control filterHelper'>
+          <option value='' data-action='clear'>{{ 'Select number of stars'|trans }}</option>
+          <option value='unrated' {{- Request.query.get('rating') == 'unrated' ? ' selected' }}>{{ 'Unrated'|trans }}</option>
+          {% for i in range(1, 5) %}
+            <option value='{{ i }}' {{- Request.query.get('rating') == i ? ' selected' }}>{{ i }}</option>
+
+          {% endfor %}
+        </select>
+        {# END RATING #}
+      </div>
+
+      <div class='d-flex mt-2'>
+        {# SEARCH DATE #}
+          <label class='mr-1 align-self-center' for='date'>{{ 'Date from'|trans }}</label>
+          <div class='input-group'>
+            <div class='input-group-prepend'>
+              <select id='dateOperator' aria-label='{{ 'Date operator'|trans }}' name='dateOperator' style='min-width: 50px' class='brr-none form-control filterHelper' data-filter='date'>
+                <option value='<' title='{{ 'less than'|trans }}' {{- Request.query.get('dateOperator') == '<' ? ' selected' }}>&lt;</option>
+                <option value='<=' title='{{ 'less than or equal to'|trans }}' {{- Request.query.get('dateOperator') == '<=' ? ' selected' }}>&le;</option>
+                <option value='=' title='{{ 'equal to'|trans }}' {{- Request.query.get('dateOperator') == '=' or Request.query.get('dateOperator') is null ? ' selected' }}>=</option>
+                <option value='>=' title='{{ 'greater than or equal to'|trans }}' {{- Request.query.get('dateOperator') == '>=' ? ' selected' }}>&ge;</option>
+                <option value='>' title='{{ 'greater than'|trans }}' {{- Request.query.get('dateOperator') == '>' ? ' selected' }}>&gt;</option>
+                <option value='!=' title='{{ 'not equal to'|trans }}' {{- Request.query.get('dateOperator') == '!=' ? ' selected' }}>&ne;</option>
+              </select>
+            </div>
+            <input id='date' name='date' type='date' class='form-control filterHelper' data-filter='date' value='{{ Request.query.get('date') != '' ? Request.query.get('date') }}'/>
+          </div>
+          <label class='ml-2 mr-1' for='dateTo'>{{ 'Date to (optional)'|trans }}</label>
+          <input id='dateTo' name='dateTo' type='date' class='form-control filterHelper' data-filter='date' value='{{ Request.query.get('dateTo') != '' ? Request.query.get('dateTo') }}'/>
+        </div>
+        {# END SEARCH DATE #}
+      </div>
+
+    </form>
+  </div>
+
+  <hr>
+  {# BUTTONS TOOLBAR #}
+  <div class='d-flex flex-wrap'>
+    {# LEFT #}
+    <div class='d-flex'>
+      <a title='{{ 'Select all'|trans }}' aria-label='{{ 'Select all'|trans }}' data-action='toggle-select-all-entities' data-target='select' href='#' class='btn btn-transparent'>
+        <i class='far fa-square'></i>
+      </a>
+      <a hidden title='{{ 'Invert selection'|trans }}' aria-label='{{ 'Invert selection'|trans }}' data-action='invert-entities-selection' href='#' class='ml-2 btn btn-transparent'>
+        <i class='fas fa-arrows-turn-to-dots'></i>
+      </a>
+      <div class='vertical-separator'></div>
+      <a title='{{ 'Toggle main text'|trans }}' aria-label='{{ 'Toggle main text'|trans }}' data-action='expand-all-entities' data-status='closed' href='#' class='btn btn-transparent'>
+        <i class='fas fa-maximize'></i>
+      </a>
+    </div>
+
+    {# RIGHT #}
+
+    {# CATEGORY #}
+    <div class='dropdown ml-auto' id='categoryFilterDropdown'>
+      <button
+        type='button'
+        class='btn btn-ghost dropdown-toggle'
+        id='categoryFilterPlaceholder'
+        data-toggle='dropdown'
+        aria-haspopup='true'
+        aria-expanded='false'
+      >
+        {{ 'Category'|trans }}
+      </button>
+
+      <div
+        class='dropdown-menu dropdown-menu-right p-2 filter-menu'
+        id='categoryFilterMenu'
+      >
+        {% if App.devMode -%}
+          <!-- [html-validate-disable-block prefer-native-element: suppress error from tom-select] -->
+        {%- endif %}
+
+        <select
+          id='categoryFilter'
+          name='category'
+          class='form-control'
+          multiple
+          aria-label='{{ 'Filter category'|trans }}'
+          placeholder='{{ 'Filter category'|trans }}'
+        >
+          <option data-current-team='1' value='' class='dropdown-header' data-action='clear'>
+            {{ 'Filter category'|trans }}
+          </option>
+
+          <option
+            data-current-team='1'
+            value='null'
+            {{- 'null' in App.Request.query.get('category')|split(',') ? ' selected' -}}
+          >
+            {{ 'No category set'|trans }}
+          </option>
+
+          {% for category in categoryArr %}
+            <option
+              data-current-team='{{ category.is_current_team }}'
+              value='{{ category.id }}'
+              {{- category.id in App.Request.query.get('category')|split(',') ? ' selected' -}}
+            >
+              {% if category.is_current_team == 0 %}{{ category.team_name }} - {% endif %}{{ category.title }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    {# STATUS #}
+    <div class='dropdown ml-2' id='statusFilterDropdown'>
+      <button
+        type='button'
+        class='btn btn-ghost dropdown-toggle'
+        id='statusFilterPlaceholder'
+        data-toggle='dropdown'
+        aria-haspopup='true'
+        aria-expanded='false'
+      >
+        {{ 'Status'|trans }}
+      </button>
+
+      <div
+        class='dropdown-menu dropdown-menu-right p-2 filter-menu'
+        id='statusFilterMenu'
+      >
+        {% if App.devMode -%}
+          <!-- [html-validate-disable-block prefer-native-element: suppress error from tom-select] -->
+        {%- endif %}
+
+        <select
+          id='statusFilter'
+          name='status'
+          class='form-control'
+          multiple
+          aria-label='{{ 'Filter status'|trans }}'
+          placeholder='{{ 'Filter status'|trans }}'
+        >
+          <option data-current-team='1' value='' class='dropdown-header' data-action='clear'>
+            {{ 'Filter status'|trans }}
+          </option>
+
+          <option
+            data-current-team='1'
+            value='null'
+            {{- 'null' in App.Request.query.get('status')|split(',') ? ' selected' -}}
+          >
+            {{ 'No status set'|trans }}
+          </option>
+
+          {% for status in statusArr %}
+            <option
+              data-current-team='{{ status.is_current_team }}'
+              value='{{ status.id }}'
+              {{- status.id in App.Request.query.get('status')|split(',') ? ' selected' -}}
+            >
+              {% if status.is_current_team == 0 %}{{ status.team_name }} - {% endif %}{{ status.title }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    {# OWNER #}
+    <div class='dropdown ml-2' id='filterOwnerDropdown'>
+      <button
+        type='button'
+        class='btn btn-ghost dropdown-toggle'
+        id='ownerFilterPlaceholder'
+        data-toggle='dropdown'
+        aria-haspopup='true'
+        aria-expanded='false'
+      >
+        {{ 'Owner'|trans }}
+      </button>
+
+      <div
+        class='dropdown-menu dropdown-menu-right p-2 filter-menu'
+        id='filterOwnerMenu'
+      >
+        {% if App.devMode -%}
+          <!-- [html-validate-disable-block prefer-native-element: suppress error from tom-select] -->
+        {%- endif %}
+
+        <select
+          id='filterOwner'
+          name='owner'
+          class='form-control'
+          multiple
+          aria-label='{{ 'Filter owner'|trans }}'
+          placeholder='{{ 'Filter owner'|trans }}'
+        >
+          <option data-current-team='1' value='' class='dropdown-header' data-action='clear'>
+            {{ 'Filter owner'|trans }}
+          </option>
+
+          {% for user in usersArr %}
+            <option data-is-archived='{{ user.is_archived_in_current_team }}' value='{{ user.userid }}' {{- user.userid in App.Request.query.get('owner')|split(',') ? ' selected' }}>{{ user.fullname }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    {# SEARCH WITH TAG #}
+    <div class='dropdown ml-2' id='tagFilterDropdown'>
+      <button
+        type='button'
+        class='btn btn-ghost dropdown-toggle'
+        id='tagFilterPlaceholder'
+        data-toggle='dropdown'
+        aria-haspopup='true'
+        aria-expanded='false'
+      >
+        {{ 'Tags'|trans }}
+      </button>
+
+      <div
+        class='dropdown-menu dropdown-menu-right p-2'
+        id='tagFilterMenu'
+      >
+        {% if App.devMode -%}
+          <!-- [html-validate-disable-block prefer-native-element: suppress error from tom-select] -->
+        {%- endif %}
+
+        <select
+          id='tagFilter'
+          multiple
+          name='tags[]'
+          class='form-control'
+          aria-label='{{ 'Tags'|trans }}'
+          placeholder='{{ 'Tags'|trans }}'
+        >
+          {% for tag in tagsArrForSelect %}
+            <option
+              value='{{ tag.tag|e('html_attr') }}'
+              {{- tag.tag in App.Request.query.all('tags') ? ' selected' }}
+            >
+              {{ tag.tag }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    {# END SEARCH WITH TAG #}
+
+    <div class='ml-2'>
+      {# SCOPE FILTER #}
+      {% include 'scope-button.html' with {'reload': 'reloadEntitiesShow,scopeBtn', 'target': 'scope_' ~ Entity.entityType.value, 'setQueryParam': 1} %}
+    </div>
+
+    <div class='vertical-separator'></div>
+    <div class='d-flex'>
+      {# SWITCH LAYOUT #}
+      <button title='{{ 'Switch layout'|trans }}' aria-label='{{ 'Switch layout'|trans }}' type='button' class='btn btn-transparent mr-1' data-action='toggle-items-layout'>
+        <i class='fas fa-fw fa-list'></i>
+        <i class='fas fa-fw fa-table'></i>
+      </button>
+    <div class='vertical-separator'></div>
+
+    <div class='d-flex'>
+      {# ORDER (Sort) #}
+      <div class='btn-group'>
+        <button class='btn btn-sm dropdown-toggle btn-transparent' type='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false' aria-label='{{ 'Sort'|trans }}' title='{{ 'Sort'|trans }}'><i class='fas fa-arrow-down-wide-short fa-fw mr-1'></i></button>
+        <div class='dropdown-menu dropdown-menu-right'>
+          <h6 class='dropdown-header'>{{ 'Sort'|trans }}</h6>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'date' and App.Request.query.get('sort') == 'desc') ? ' active' }}' data-action='query' data-target='date-desc'>{{ 'Newest'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'date' and App.Request.query.get('sort') == 'asc') ? ' active' }}' data-action='query' data-target='date-asc'>{{ 'Oldest'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'lastchange' and App.Request.query.get('sort') == 'desc') ? ' active' }}' data-action='query' data-target='lastchange-desc'>{{ 'Recently modified'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'lastchange' and App.Request.query.get('sort') == 'asc') ? ' active' }}' data-action='query' data-target='lastchange-asc'>{{ 'Least recently modified'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'cat' and App.Request.query.get('sort') == 'desc') ? ' active' }}' data-action='query' data-target='cat-desc'>{{ 'Category'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'cat' and App.Request.query.get('sort') == 'asc') ? ' active' }}' data-action='query' data-target='cat-asc'>{{ 'Category (inverted)'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'status' and App.Request.query.get('sort') == 'desc') ? ' active' }}' data-action='query' data-target='status-desc'>{{ 'Status'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'status' and App.Request.query.get('sort') == 'asc') ? ' active' }}' data-action='query' data-target='status-asc'>{{ 'Status (inverted)'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'id' and App.Request.query.get('sort') == 'desc') ? ' active' }}' data-action='query' data-target='id-desc'>{{ 'Highest ID'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'id' and App.Request.query.get('sort') == 'asc') ? ' active' }}' data-action='query' data-target='id-asc'>{{ 'Lowest ID'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'customid' and App.Request.query.get('sort') == 'desc') ? ' active' }}' data-action='query' data-target='customid-desc'>{{ 'Highest Custom ID'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'customid' and App.Request.query.get('sort') == 'asc') ? ' active' }}' data-action='query' data-target='customid-asc'>{{ 'Lowest Custom ID'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'comment' and App.Request.query.get('sort') == 'desc') ? ' active' }}' data-action='query' data-target='comment-desc'>{{ 'Recently commented'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'title' and App.Request.query.get('sort') == 'asc') ? ' active' }}' data-action='query' data-target='title-asc'>{{ 'Title (alphabetical)'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'title' and App.Request.query.get('sort') == 'desc') ? ' active' }}' data-action='query' data-target='title-desc'>{{ 'Title (inverted)'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'user' and App.Request.query.get('sort') == 'asc') ? ' active' }}' data-action='query' data-target='user-asc'>{{ 'User (alphabetical)'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'user' and App.Request.query.get('sort') == 'desc') ? ' active' }}' data-action='query' data-target='user-desc'>{{ 'User (inverted)'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'rating' and App.Request.query.get('sort') == 'desc') ? ' active' }}' data-action='query' data-target='rating-desc'>{{ 'Highest rating'|trans }}</button>
+          <button type='button' class='btn btn-dropdown-item dropdown-item {{- (App.Request.query.get('order') == 'rating' and App.Request.query.get('sort') == 'asc') ? ' active' }}' data-action='query' data-target='rating-asc'>{{ 'Lowest rating'|trans }}</button>
+        </div>
+      </div>
+      {# LIMIT if there is nothing in the query params, take the user configured one #}
+      <div class='btn-group'>
+        <button class='btn btn-sm dropdown-toggle btn-transparent' type='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false' aria-label='{{ 'Results per page'|trans }}' title='{{ 'Results per page'|trans }}'><i class='fas fa-list-ol fa-fw mr-1'></i></button>
+        <div class='dropdown-menu dropdown-menu-right'>
+          <h6 class='dropdown-header'>{{ 'Results per page'|trans }}</h6>
+        {% for option in limitOptions(DisplayParams.limit) %}
+          <button type='button' class='btn btn-dropdown-item dropdown-item' data-action='insert-param-and-reload' data-target='limit' data-reload='reloadEntitiesShow' value='{{ option }}'>{{ option }}</button>
+        {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  {# active filters line #}
+  <div class='d-flex' id='activeFiltersDiv' ></div>
+
+  <hr>
+
+  {% if categoryArr|length == 0 %}
+    <div class='d-flex'>
+      {% set categoriesLink = '<a href="%s">'|format(Entity.entityType.toCategoryPage()) %}
+      {{ 'Tip: %screate categories%s to start organizing your work.'|trans|format(categoriesLink, "</a>")|raw|msg('ok', false) }}
+    </div>
+  {% endif %}
+
+  <div id='showModeContent'>
+      <div id='withSelected' class='d-none'>
+        <div class='row mx-0'><p>{{ 'With selected:'|trans }}</p></div>
+        {# First line #}
+        <div class='row mx-0 form-inline mb-3'>
+          {# Export #}
+          <select aria-label='{{ 'Export'|trans }}' data-action='export-selected-entities' autocomplete='off' class='mr-1 mb-2 form-control'>
+            <option selected disabled>{{ 'Export'|trans }}</option>
+            <option value='eln'>{{ 'ELN Archive'|trans }}</option>
+            <option value='zip'>{{ 'ZIP Archive'|trans }}</option>
+            <option value='csv'>{{ 'CSV File'|trans }}</option>
+            <option value='pdf'>{{ 'PDF File'|trans }}</option>
+            <option value='qrpdf'>{{ 'QR codes PDF'|trans }}</option>
+            <option value='json'>{{ 'JSON'|trans }}</option>
+          </select>
+          {# Action buttons #}
+          <button data-action='patch-selected-entities' data-what='forcelock' type='button' class='btn btn-primary mr-1 mb-2' aria-label='{{ 'Lock the selected entities'|trans }}' title='{{ 'Lock the selected entities'|trans }}'>{{ 'Lock'|trans }}</button>
+          <button data-action='patch-selected-entities' data-what='forceunlock' type='button' class='btn btn-primary mr-1 mb-2' aria-label='{{ 'Unlock the selected entities'|trans }}' title='{{ 'Unlock the selected entities'|trans }}'>{{ 'Unlock'|trans }}</button>
+          <button data-action='patch-selected-entities' data-what='timestamp' type='button' class='btn btn-primary mr-1 mb-2' aria-label='{{ 'Timestamp the selected entities'|trans }}' title='{{ 'Timestamp the selected entities'|trans }}'>{{ 'Timestamp'|trans }}</button>
+          <button data-action='patch-selected-entities' data-what='archive' type='button' class='btn btn-secondary mr-1 mb-2' aria-label='{{ 'Archive the selected entities'|trans }}' title='{{ 'Archive the selected entities'|trans }}'>{{ 'Archive'|trans }}</button>
+          <button data-action='patch-selected-entities' data-what='unarchive' type='button' class='btn btn-secondary mr-1 mb-2' aria-label='{{ 'Unarchive the selected entities'|trans }}' title='{{ 'Unarchive the selected entities'|trans }}'>{{ 'Unarchive'|trans }}</button>
+          <button data-action='patch-selected-entities' data-what='destroy' type='button' class='btn btn-danger-ghost mr-1 mb-2' aria-label='{{ 'Delete the selected entities'|trans }}' title='{{ 'Delete the selected entities'|trans }}'>{{ 'Delete'|trans }}</button>
+          <button data-action='patch-selected-entities' data-what='restore' type='button' class='btn btn-primary mr-1 mb-2' aria-label='{{ 'Restore the selected entities'|trans }}' title='{{ 'Restore the selected entities'|trans }}'>{{ 'Restore'|trans }}</button>
+        </div>
+
+        <form id='multiChangesForm' class='row mx-0 form-inline'>
+          {# CHANGE CATEGORY #}
+          <select aria-label='{{ 'Change category'|trans }}' name='category' autocomplete='off' class='mr-1 mb-2 form-control'>
+            <option selected disabled value=''>
+              {{ 'Change category'|trans }}
+            </option>
+            <option value='0'>{{ 'Not set'|trans }}</option>
+            {% for category in categoryArr|filter(c => c.is_current_team == 1) %}
+                <option value='{{ category.id }}'>{{ category.title }}</option>
+            {% endfor %}
+          </select>
+          {# CHANGE STATUS #}
+          <select aria-label='{{ 'Change status'|trans }}' name='status' autocomplete='off' class='mr-1 mb-2 form-control'>
+            <option selected disabled value=''>
+              {{ 'Change status'|trans }}
+            </option>
+            <option value='0'>{{ 'Not set'|trans }}</option>
+            {% for status in statusArr|filter(s => s.is_current_team == 1) %}
+                <option value='{{ status.id }}'>{{ status.title }}</option>
+            {% endfor %}
+          </select>
+          {# CANREAD BASE #}
+          <select aria-label='{{ 'Change read permissions'|trans }}' name='canread_base' autocomplete='off' class='mr-1 mb-2 form-control'>
+            <option selected disabled value=''>{{ 'Change read permissions'|trans }}</option>
+            {% for key, value in visibilityArr %}
+              <option value='{{ key }}'>{{ value }}</option>
+            {% endfor %}
+          </select>
+          {# CANWRITE BASE #}
+          <select aria-label='{{ 'Change write permissions'|trans }}' name='canwrite_base' autocomplete='off' class='mr-1 mb-2 form-control'>
+            <option selected disabled value=''>{{ 'Change write permissions'|trans }}</option>
+            {% for key, value in visibilityArr %}
+              <option value='{{ key }}'>{{ value }}</option>
+            {% endfor %}
+          </select>
+            {% if pageName == 'database' %}
+            {# CANBOOK #}
+            <select aria-label='{{ 'Change book permissions'|trans }}' name='is_bookable' autocomplete='off' class='mr-1 mb-2 form-control'>
+                <option selected disabled value=''>{{ 'Change book permissions'|trans }}</option>
+                <option value='1'>{{ 'Allow booking this resource'|trans }}</option>
+                <option value='0'>{{ 'Do not allow booking this resource'|trans }}</option>
+            </select>
+            {% endif %}
+          {# ADD A TAG #}
+          <input type='text' aria-label='{{ 'Add a tag'|trans }}' id='createTagInputMultiple' name='tags' class='createTagInputMultiple mr-1 mb-2 form-control' data-autocomplete='tags' placeholder='{{ 'Add a tag'|trans }}' />
+          {# ADD A RESOURCE LINK #}
+          <div class='input-group mb-2 mr-2'>
+            <input type='text' aria-label='{{ 'Link to a resource'|trans }}' id='addLinkItemsInput' name='items_links' class='form-control' placeholder='{{ 'Link to a resource'|trans }}' />
+            <div class='input-group-append'>
+              <select id='addLinkCatFilter' class='brl-none form-control' aria-label='{{ 'Limit category'|trans }}'>
+                <option selected value=''>{{ 'Any category'|trans }}</option>
+                {% for cat in App.itemsCategoryArr %}
+                  <option value='{{ cat.id }}'>{{ cat.title }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          {# ADD AN EXPERIMENT LINK #}
+          <div class='input-group mb-2 mr-2'>
+            <input type='text' aria-label='{{ 'Link to an experiment'|trans }}' id='addLinkExpInput' name='experiments_links' class='form-control' placeholder='{{ 'Link to an experiment'|trans }}' />
+            <div class='input-group-append'>
+              <select id='addLinkOwnerFilter' class='brl-none form-control' aria-label='{{ 'Limit author'|trans }}'>
+                <option selected value=''>{{ 'Any author'|trans }}</option>
+                {% for user in usersArr %}
+                  <option value='{{ user.userid }}'>{{ user.fullname }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          {# SAVE AND RESET BUTTONS #}
+          <button data-action='save-multi-changes' type='submit' class='btn btn-primary mr-1 mb-2'>{{ 'Save'|trans }}</button>
+          <button data-action='clear-form' data-target='multiChangesForm' type='reset' class='btn btn-danger-ghost mb-2'>{{ 'Reset'|trans }}</button>
+        </form>
+      </div>
+
+      {# SKELETONS #}
+      <div id='itemListSkeleton' class='d-flex flex-column' aria-hidden='true'>
+        {% if App.Users.userData.display_mode == 'it' %}
+          {% for i in 1..DisplayParams.limit %}
+            <section data-twiglinterstfu='{{ i }}' class='entity entity-skeleton pl-3 py-3 d-flex'>
+              <div class='mt-1 mr-3'>
+                <span class='skeleton-box' data-skeleton='checkbox'></span>
+              </div>
+
+              <div class='align-self-center flex-grow-1'>
+                <div class='mb-2'>
+                  <span class='skeleton-box mr-1' data-skeleton='pill'></span>
+                  <span class='skeleton-box mr-1' data-skeleton='pill'></span>
+                  <span class='skeleton-box' data-skeleton='pill-sm'></span>
+                </div>
+
+                <div class='d-flex title flex-nowrap my-2 align-items-center'>
+                  <span class='skeleton-box mr-1' data-skeleton='custom-id'></span>
+                  <span class='skeleton-box' data-skeleton='title'></span>
+                </div>
+
+                <div class='mb-2'>
+                  <span class='skeleton-box' data-skeleton='owner'></span>
+                </div>
+
+                <p class='my-2'>
+                  <span class='d-inline-flex flex-wrap'>
+                    <span class='skeleton-box mr-1' data-skeleton='tag'></span>
+                    <span class='skeleton-box mr-1' data-skeleton='tag'></span>
+                    <span class='skeleton-box' data-skeleton='tag'></span>
+                  </span>
+                </p>
+
+                <div class='d-flex flex-row align-items-start'>
+                  <span class='skeleton-box mr-1' data-skeleton='icon'></span>
+                  <span class='skeleton-box mr-2' data-skeleton='icon'></span>
+
+                  <div class='d-flex flex-column'>
+                    <span class='skeleton-box mb-1' data-skeleton='date'></span>
+                    <span class='skeleton-box' data-skeleton='date-sm'></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class='d-flex justify-content-end ml-auto text-nowrap'>
+                <span class='skeleton-box' data-skeleton='icon'></span>
+              </div>
+            </section>
+          {% endfor %}
+
+        {% else %}
+          <div class='table-responsive'>
+            <table class='table table-sm entity-table-skeleton mb-0'>
+              <tbody>
+                {% for i in 1..DisplayParams.limit %}
+                  <tr data-twiglinterstfu='{{ i }}'>
+                    <td><span class='skeleton-box skeleton-checkbox'></span></td>
+                    <td><span class='skeleton-box'></span></td>
+                    <td><span class='skeleton-box'></span></td>
+                    <td><span class='skeleton-box'></span></td>
+                    <td><span class='skeleton-box'></span></td>
+                    <td><span class='skeleton-box'></span></td>
+                    <td>
+                      <span class='d-inline-flex flex-wrap'>
+                        <span class='skeleton-box skeleton-tag mr-1'></span>
+                        <span class='skeleton-box skeleton-tag mr-1'></span>
+                        <span class='skeleton-box skeleton-tag'></span>
+                      </span>
+                    </td>
+                    <td><span class='skeleton-box'></span></td>
+                    <td><span class='skeleton-box'></span></td>
+                    <td><span class='skeleton-box'></span></td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endif %}
+      </div>
+      {# this is where components will be mounted #}
+      <div id='entityList'></div>
+
+  <div id='info'
+      data-page='show'
+      data-limit='{{ DisplayParams.limit }}'
+  >
+  </div>
+</div>
+
+{% endblock body %}

@@ -1,0 +1,11 @@
+{
+  "name": "minify-study",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "cssnano": "5.1.15",
+    "postcss": "8.5.10",
+    "postcss-cli": "11.0.1",
+    "terser": "5.46.2"
+  }
+}

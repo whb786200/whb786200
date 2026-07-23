@@ -1,0 +1,8 @@
+theme: jekyll-theme-slate
+title: soilphysics
+description: Basic and model-based soil physical data analyses
+url: https://arsilva87.github.io/soilphysics/
+author: da Silva & de Lima
+plugins:
+  - jekyll-seo-tag
+google_analytics: UA-147928758-3

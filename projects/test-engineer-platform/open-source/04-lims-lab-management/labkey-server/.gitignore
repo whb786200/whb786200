@@ -1,0 +1,64 @@
+# Ignore user-providde files
+.envrc
+
+# Ignore build generated files
+.gradle/
+.node/
+build/
+enlistment.properties
+server/config.properties
+#IntelliJ build output directory
+server/bootstrap/out/
+dist/
+external/
+
+# Ignore other common repository locations
+distributions/
+labkey-api-*/
+labkey-ui-components/
+remoteapi/
+server/modules/ 
+server/testAutomation/
+tools/
+clientAPIs/*
+!clientAPIs/README.md
+
+# Include the remoteapi README -- this line will override previous exclusion
+!remoteapi/README.md
+
+# Include the modules README.md file -- this line will override previous exclusion
+!server/modules/README.md
+
+# Ignore parts of the .idea dir
+.idea/libraries/
+.idea/modules/
+.idea/shelf
+.idea/.gitignore
+.idea/jarRepositories.xml
+.idea/jsLibraryMappings.xml
+.idea/modules.xml
+.idea/workspace.xml
+.idea/dataSources/
+.idea/dataSources.xml
+.idea/dataSources.local.xml
+.idea/.name
+# Files installed from templates
+.idea/runConfigurations/LabKey_Dev.xml
+.idea/runConfigurations/LabKey_Production.xml
+.idea/runConfigurations/LabKeyEmbedded_Dev.xml
+.idea/runConfigurations/Spring_Boot_LabKey_Embedded_Tomcat_Dev.xml
+.idea/gradle.xml
+.idea/compiler.xml
+.idea/misc.xml
+.idea/vcs.xml
+.idea/sqldialects.xml
+
+# AI files
+.claude/settings.local.json
+.claude/hooks/*.log
+.playwright-mcp/
+.vscode/
+
+# Python bytecode
+__pycache__/
+*.pyc

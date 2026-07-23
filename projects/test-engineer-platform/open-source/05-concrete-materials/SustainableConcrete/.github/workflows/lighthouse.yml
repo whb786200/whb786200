@@ -1,0 +1,51 @@
+# Lighthouse CI: enforces performance, accessibility, and resource budgets
+# on the BOxCrete website. Runs on PRs that touch the site.
+# Configuration: lighthouserc.json + budgets.json.
+
+name: Lighthouse CI
+
+# Cancel obsolete runs on rapid pushes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches: [main, master]
+    paths: &lighthouse_paths
+      - 'docs/**'
+      - 'lighthouserc.json'
+      - '.github/workflows/lighthouse.yml'
+  pull_request:
+    branches: [main, master]
+    paths: *lighthouse_paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Lighthouse CI
+        run: npx lhci autorun
+        env:
+          # Public uploads to temporary-public-storage are anonymous;
+          # no token required for our config.
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}

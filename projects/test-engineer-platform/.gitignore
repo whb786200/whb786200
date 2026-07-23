@@ -1,0 +1,9 @@
+node_modules/
+deploy-build/
+deploy-build-full/
+deploy-test-engineer*.zip
+deploy-test-engineer*.tar.gz
+*.log
+.env
+.DS_Store
+Thumbs.db

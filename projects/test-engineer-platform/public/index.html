@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>试验工程师数据自动化平台</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img src="/assets/logo.svg" alt="" />
+          <div>
+            <strong>试验工程师</strong>
+            <span>数据自动化平台</span>
+          </div>
+        </div>
+        <nav class="nav">
+          <button class="nav-item active" data-view="resources">
+            <i data-lucide="folder-open"></i>
+            资源表格
+          </button>
+          <button class="nav-item" data-view="agent">
+            <i data-lucide="bot"></i>
+            试验智能体
+          </button>
+          <button class="nav-item" data-view="calculator">
+            <i data-lucide="calculator"></i>
+            自动计算
+          </button>
+          <button class="nav-item" data-view="knowledge">
+            <i data-lucide="library-big"></i>
+            资料库
+          </button>
+          <button class="nav-item" data-view="opensource">
+            <i data-lucide="blocks"></i>
+            开源融合
+          </button>
+          <button class="nav-item" data-view="points">
+            <i data-lucide="circle-dollar-sign"></i>
+            积分明细
+          </button>
+          <button class="nav-item" data-view="promote">
+            <i data-lucide="share-2"></i>
+            推广入口
+          </button>
+          <button class="nav-item admin-only hidden" data-view="admin">
+            <i data-lucide="shield-check"></i>
+            人员管理
+          </button>
+        </nav>
+        <div class="user-panel hidden" id="userPanel">
+          <span id="userName">未登录</span>
+          <strong id="pointBalance">0 分</strong>
+          <button class="ghost-button" id="logoutButton">
+            <i data-lucide="log-out"></i>
+            退出
+          </button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <section class="auth-view" id="authView">
+          <div class="auth-visual">
+            <div class="auth-copy">
+              <span>Open-source powered test engineering</span>
+              <h1>资源、积分推广和试验数据计算放进同一个工作台。</h1>
+              <p>内置人员注册、推荐码、积分流水、Excel 表格下载，并融合国外开源土工、混凝土、LIMS 和仪器采集项目的产品形态。</p>
+            </div>
+          </div>
+          <div class="auth-panel">
+            <div class="tabs">
+              <button class="tab active" data-auth-tab="login">登录</button>
+              <button class="tab" data-auth-tab="register">注册</button>
+            </div>
+
+            <form id="loginForm" class="form">
+              <label>
+                用户名
+                <input name="username" value="admin" autocomplete="username" />
+              </label>
+              <label>
+                密码
+                <input name="password" type="password" value="admin123" autocomplete="current-password" />
+              </label>
+              <button class="primary-button" type="submit">
+                <i data-lucide="log-in"></i>
+                登录系统
+              </button>
+            </form>
+
+            <form id="registerForm" class="form hidden">
+              <div class="field-grid">
+                <label>
+                  用户名
+                  <input name="username" autocomplete="username" required />
+                </label>
+                <label>
+                  密码
+                  <input name="password" type="password" autocomplete="new-password" required />
+                </label>
+              </div>
+              <label>
+                姓名
+                <input name="name" required />
+              </label>
+              <label>
+                单位
+                <input name="company" />
+              </label>
+              <div class="field-grid">
+                <label>
+                  证书编号
+                  <input name="licenseNo" />
+                </label>
+                <label>
+                  手机
+                  <input name="phone" />
+                </label>
+              </div>
+              <label>
+                推广码
+                <input name="inviteCode" id="inviteCodeInput" />
+              </label>
+              <button class="primary-button" type="submit">
+                <i data-lucide="user-plus"></i>
+                注册并进入
+              </button>
+            </form>
+            <p class="form-message" id="authMessage"></p>
+          </div>
+        </section>
+
+        <section class="workspace hidden" id="workspace">
+          <header class="topbar">
+            <div>
+              <span class="eyebrow">Engineer Console</span>
+              <h2 id="viewTitle">资源表格</h2>
+            </div>
+            <div class="topbar-actions">
+              <div class="balance-pill">
+                <i data-lucide="coins"></i>
+                <span id="topBalance">0 分</span>
+              </div>
+            </div>
+          </header>
+
+          <section class="view active" id="resourcesView">
+            <div class="toolbar">
+              <label class="search-box">
+                <i data-lucide="search"></i>
+                <input id="resourceSearch" placeholder="搜索击实、配合比、沥青、仪器..." />
+              </label>
+              <select id="categoryFilter">
+                <option value="">全部类别</option>
+              </select>
+            </div>
+            <div class="resource-grid" id="resourceGrid"></div>
+          </section>
+
+          <section class="view" id="agentView">
+            <div class="agent-layout">
+              <div class="agent-panel">
+                <div class="section-header">
+                  <div>
+                    <h3>试验工程师智能体</h3>
+                    <span>识别勘察、土工、岩土、检验、仪器和材料场景，推荐计算器、表格和开源模块。</span>
+                  </div>
+                </div>
+                <form class="agent-form" id="agentForm">
+                  <textarea id="agentMessage" rows="7" placeholder="例如：我要做土工击实和压实度计算，推荐哪个表格和模块？"></textarea>
+                  <div class="prompt-row">
+                    <button class="chip-button" type="button" data-agent-prompt="勘察 AGS 和 CPT 文件怎么导入校验？">勘察导入</button>
+                    <button class="chip-button" type="button" data-agent-prompt="我要做土工击实和压实度计算，推荐哪个表格和模块？">压实度</button>
+                    <button class="chip-button" type="button" data-agent-prompt="检验试验管理要做频次、限值和审核流程，应该参考哪些开源项目？">检验管理</button>
+                    <button class="chip-button" type="button" data-agent-prompt="仪器数据采集和自动化试验执行怎么接入？">仪器采集</button>
+                  </div>
+                  <button class="primary-button" type="submit">
+                    <i data-lucide="send"></i>
+                    让智能体分析
+                  </button>
+                </form>
+              </div>
+              <div class="agent-result" id="agentResult">
+                <div class="empty-state">输入试验工程问题后，智能体会给出下一步、推荐模块和相关资源。</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="view" id="calculatorView">
+            <div class="calc-layout">
+              <div class="calc-panel">
+                <div class="section-header">
+                  <div>
+                    <h3>自动计算工作台</h3>
+                    <span>第一版融合 geotech-utils、soiltools、DIGGS_SQL 和 SustainableConcrete 的产品形态。</span>
+                  </div>
+                </div>
+                <label>
+                  计算类型
+                  <select id="calculatorType">
+                    <option value="sieve">土工筛分/级配</option>
+                    <option value="moistureDensity">含水率/干密度/压实度</option>
+                    <option value="atterberg">液塑限/塑性指数</option>
+                    <option value="concrete">混凝土强度/坍落度/GWP 估算</option>
+                  </select>
+                </label>
+                <form class="form calc-form" id="calculatorForm"></form>
+              </div>
+              <div class="result-panel">
+                <div class="section-header">
+                  <div>
+                    <h3>计算结果</h3>
+                    <span>结果可作为后续生成报告、扣积分计算或导出 Excel 的基础。</span>
+                  </div>
+                </div>
+                <div id="calculationResult" class="result-box">选择计算类型并填写数据。</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="view" id="knowledgeView">
+            <div class="section-header">
+              <div>
+                <h3>工程检测资料库</h3>
+                <span>来自 F:\IMA知识库上传\工程检测相关资料合集，按可融合方式分类调用。</span>
+              </div>
+            </div>
+            <div class="knowledge-summary" id="knowledgeSummary"></div>
+            <div class="toolbar knowledge-toolbar">
+              <label class="search-box">
+                <i data-lucide="search"></i>
+                <input id="knowledgeSearch" placeholder="搜索见证取样、试验计划、报告格式、回弹法..." />
+              </label>
+              <select id="knowledgeCategoryFilter">
+                <option value="">全部资料类型</option>
+              </select>
+              <select id="knowledgePriorityFilter">
+                <option value="">全部优先级</option>
+                <option value="high">可优先融合</option>
+                <option value="medium">可结构化</option>
+                <option value="reference">参考检索</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>资料</th>
+                    <th>分类</th>
+                    <th>融合方式</th>
+                    <th>优先级</th>
+                  </tr>
+                </thead>
+                <tbody id="knowledgeRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="view" id="opensourceView">
+            <div class="section-header">
+              <div>
+                <h3>开源项目融合清单</h3>
+                <span>已克隆到本地 open-source 目录，按许可证和业态决定嵌入方式。</span>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>分类</th>
+                    <th>项目</th>
+                    <th>许可证</th>
+                    <th>技术栈</th>
+                    <th>业态</th>
+                    <th>融合方式</th>
+                  </tr>
+                </thead>
+                <tbody id="openSourceRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="view" id="pointsView">
+            <div class="section-header">
+              <div>
+                <h3>积分流水</h3>
+                <span>下载扣分、推广加分、管理员调整都会记录。</span>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>时间</th>
+                    <th>类型</th>
+                    <th>说明</th>
+                    <th>积分</th>
+                  </tr>
+                </thead>
+                <tbody id="pointRows"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="view" id="promoteView">
+            <div class="promote-layout">
+              <div class="promote-main">
+                <span class="eyebrow">Invite Link</span>
+                <h3>推广一次注册，推荐人 +10 分。</h3>
+                <div class="invite-code" id="inviteCode">-</div>
+                <div class="copy-row">
+                  <input id="inviteLink" readonly />
+                  <button class="icon-button" id="copyInviteButton" title="复制推广链接">
+                    <i data-lucide="copy"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="rule-list">
+                <div>
+                  <strong>注册赠送</strong>
+                  <span>自然注册 +5 分，使用推广码注册 +3 分。</span>
+                </div>
+                <div>
+                  <strong>推广奖励</strong>
+                  <span>每成功推荐一名人员注册，推荐人 +10 分。</span>
+                </div>
+                <div>
+                  <strong>下载扣分</strong>
+                  <span>常用表格 1 分，计算类表格 2 分，部分规范清单免费。</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="view" id="adminView">
+            <div class="section-header">
+              <div>
+                <h3>注册人员管理</h3>
+                <span>管理员可查看人员和手动调整积分。</span>
+              </div>
+            </div>
+            <form class="admin-form" id="pointAdjustForm">
+              <select name="userId" id="adminUserSelect"></select>
+              <input name="amount" type="number" step="1" placeholder="积分变动，如 20 或 -5" />
+              <input name="note" placeholder="调整原因" />
+              <button class="primary-button" type="submit">
+                <i data-lucide="plus-circle"></i>
+                提交
+              </button>
+            </form>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>姓名</th>
+                    <th>单位</th>
+                    <th>证书编号</th>
+                    <th>推广码</th>
+                    <th>积分</th>
+                    <th>角色</th>
+                  </tr>
+                </thead>
+                <tbody id="adminUserRows"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast" id="toast"></div>
+    <script src="/vendor/lucide/lucide.js"></script>
+    <script src="/assets/app.js" type="module"></script>
+  </body>
+</html>

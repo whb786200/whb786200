@@ -1,0 +1,1582 @@
+/**
+ * @author Nicolas CARPi @ Deltablot
+ * @copyright 2012 Nicolas CARPi
+ * @see https://www.elabftw.net Official website
+ * @license AGPL-3.0
+ * @package elabftw
+ */
+import $ from 'jquery';
+import { ApiC } from './api';
+import { Malle, InputType, SelectOptions } from '@deltablot/malle';
+import 'bootstrap/js/src/modal.js';
+import FavTag from './FavTag.class';
+import { clearLocalStorage, rememberLastSelected, selectLastSelected } from './localStorage';
+import {
+  adjustHiddenState,
+  clearForm,
+  collectForm,
+  escapeExtendedQuery,
+  generateMetadataLink,
+  handleReloads,
+  getSafeElementById,
+  getRandomColor,
+  listenTrigger,
+  makeSortableGreatAgain,
+  mkSpin,
+  mkSpinStop,
+  permissionsToJson,
+  relativeMoment,
+  reloadElements,
+  replaceWithTitle,
+  toggleEditCompound,
+  toggleGrayClasses,
+  toggleIcon,
+  TomSelect,
+  updateEntityBody,
+  updateCatStat,
+  makeMalleableColumnsGreatAgain, rebuildTomSelectOptions,
+  mountRors,
+} from './misc';
+import i18next from './i18n';
+import { Metadata } from './Metadata.class';
+import { DateTime } from 'luxon';
+import { Action, EntityType, Model, LinkSubModel } from './interfaces';
+import { MathJaxObject } from 'mathjax-full/js/components/startup';
+declare const MathJax: MathJaxObject;
+import 'bootstrap-markdown-fa5/js/bootstrap-markdown';
+import 'bootstrap-markdown-fa5/locale/bootstrap-markdown.de.js';
+import 'bootstrap-markdown-fa5/locale/bootstrap-markdown.es.js';
+import 'bootstrap-markdown-fa5/locale/bootstrap-markdown.fr.js';
+import 'bootstrap-markdown-fa5/locale/bootstrap-markdown.it.js';
+import 'bootstrap-markdown-fa5/locale/bootstrap-markdown.ja.js';
+import 'bootstrap-markdown-fa5/locale/bootstrap-markdown.kr.js';
+import 'bootstrap-markdown-fa5/locale/bootstrap-markdown.nl.js';
+import 'bootstrap-markdown-fa5/locale/bootstrap-markdown.pl.js';
+import 'bootstrap-markdown-fa5/locale/bootstrap-markdown.ptBR.js';
+import 'bootstrap-markdown-fa5/locale/bootstrap-markdown.ru.js';
+import 'bootstrap-markdown-fa5/locale/bootstrap-markdown.sl.js';
+import 'bootstrap-markdown-fa5/locale/bootstrap-markdown.sv.js';
+import 'bootstrap-markdown-fa5/locale/bootstrap-markdown.zh.js';
+import { notify } from './notify';
+import TableSorting from './TableSorting.class';
+import { KeyboardShortcuts } from './KeyboardShortcuts.class';
+import JsonEditorHelper from './JsonEditorHelper.class';
+import { Counter } from './Counter.class';
+import { getEditor } from './Editor.class';
+import Todolist from './Todolist.class';
+import { entity } from './getEntity';
+import { on, get } from './handlers';
+import Tab from './Tab.class';
+import { core } from './core';
+
+// we need to extend the interface from malle to add more properties
+interface Status extends SelectOptions {
+  id: number;
+  color: string;
+  title: string;
+  is_current_team: number;
+}
+
+on('toggle-dark-mode', (el: HTMLElement) => {
+  const currentTheme = parseInt(el.dataset.currentTheme, 10);
+  // Auto (0) and Light (1) should both toggle to Dark (2)
+  const targetTheme = currentTheme === 2 ? 1 : 2;
+  ApiC.patch(`${Model.User}/me`, { theme_variant: targetTheme }).then(() => {
+    const isDark = targetTheme === 2;
+    document.documentElement.classList.toggle('dark-mode', isDark);
+    document.cookie = `theme_variant=${targetTheme}; Path=/; Max-Age=31536000; SameSite=Lax; Secure`;
+    el.dataset.currentTheme = String(targetTheme);
+  });
+});
+
+// HEARTBEAT
+// this function is to check periodically that we are still authenticated
+// and show a message if we the session is not valid anymore but we are still on a page requiring auth
+// only run if we are an authenticated user
+if (core.isAuth) {
+  // check every 5 minutes
+  const heartRate = 300000;
+  setInterval(() => {
+    fetch('app/controllers/HeartBeat.php').then(response => {
+      if (!response.ok) {
+        clearLocalStorage();
+        alert('Your session expired!');
+        window.location.replace('login.php');
+      }
+    }).catch(error => alert(error));
+  }, heartRate);
+}
+
+const FavTagC = new FavTag();
+const TodolistC = new Todolist();
+
+const TableSortingC = new TableSorting();
+// for searching inputs, allow specific triggers for East & South East Asian characters
+const hasEastSEAsian = (s: string): boolean => (
+  /\p{Script=Han}|\p{Script=Hiragana}|\p{Script=Katakana}|\p{Script=Hangul}|\p{Script=Thai}|\p{Script=Lao}|\p{Script=Khmer}|\p{Script=Myanmar}|\p{Script=Bopomofo}/u.test(s)
+);
+
+const countGraphemes = (text: string): number => {
+  // use Intl.Segmenter to handle locale-sensitive text segmentation (graphemes, sentences, etc.,)
+  const graphemeSegmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' });
+  return Array.from(graphemeSegmenter.segment(text)).length;
+};
+
+TableSortingC.init();
+(new Tab()).init(document.querySelector('.tabbed-menu'));
+
+makeSortableGreatAgain();
+mountRors();
+
+const userPrefs = document.getElementById('user-prefs').dataset;
+if (userPrefs.scDisabled === '0') {
+  const kbd = new KeyboardShortcuts(
+    userPrefs.scCreate,
+    userPrefs.scEdit,
+    userPrefs.scTodolist,
+    userPrefs.scFavorite,
+    userPrefs.scSearch,
+  );
+  kbd.init();
+}
+
+// SIDE PANEL STATE
+const openedSidePanel = localStorage.getItem('opened-sidepanel');
+if (openedSidePanel === Model.FavTag) {
+  FavTagC.toggle();
+}
+if (openedSidePanel === Model.Todolist) {
+  TodolistC.toggle();
+}
+
+// ACTIVATE REACTIVE COUNT OF .COUNTABLE ITEMS
+document.querySelectorAll('[data-count-for]').forEach((container: HTMLElement) => new Counter(container));
+
+// BACK TO TOP BUTTON
+const btn = document.createElement('button');
+btn.type = 'button';
+btn.dataset.action = 'scroll-top';
+// make it look like a button, and on the right side of the screen, not too close from the bottom
+btn.classList.add('btn', 'btn-secondary', 'floating-middle-right');
+// element is invisible at first so we can make it visible so it triggers a css transition and appears progressively
+btn.style.opacity = '0';
+// will not be shown for small screens, only large ones
+btn.classList.add('d-none', 'd-xl-inline', 'd-lg-inline');
+// the button is an up arrow
+const icon = document.createElement('i');
+icon.classList.add('fas', 'fa-arrow-up');
+btn.replaceChildren(icon);
+// give it an id so we can remove it easily
+btn.id = 'backToTopButton';
+btn.setAttribute('aria-label', 'Back to top');
+btn.title = 'Back to top';
+
+// called when viewport approaches the footer
+const intersectionCallback = (entries): void => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && document.getElementById('backToTopButton')) {
+      // we're near the top of the screen, remove the button if it's here
+      document.getElementById('backToTopButton').remove();
+    } else if (!entry.isIntersecting && !document.getElementById('backToTopButton')){ // user scrolled the trigger out AND button is not here
+      const addedBtn = document.getElementById('container').appendChild(btn);
+      // here we use requestAnimationFrame or the browser won't see the change and the css transition won't be triggered
+      requestAnimationFrame(() => {
+        addedBtn.style.opacity = '100';
+      });
+    }
+  });
+};
+
+const observer = new IntersectionObserver(intersectionCallback);
+observer.observe(document.getElementById('scrollTopBtnAnchor'));
+// END BACK TO TOP BUTTON
+
+listenTrigger();
+adjustHiddenState();
+relativeMoment();
+replaceWithTitle();
+
+// set a random color to all the "create new" catstat modals
+document.querySelectorAll('.randomColor').forEach((input: HTMLInputElement) => {
+  input.value = getRandomColor();
+});
+
+// look for elements that should have focus
+const needFocus = (document.querySelector('[data-focus="1"]') as HTMLInputElement);
+if (needFocus) {
+  needFocus.focus();
+}
+
+// START SAFARI DETECTION
+// iOS browsers often look like Safari UA; exclude by tokens:
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/User-Agent
+const FORBIDDEN_UA_TOKENS = [
+  'Chrome',
+  'CriOS',
+  'Edg',
+  'EdgiOS',
+  'OPT',
+  'OPiOS',
+  'Firefox',
+  'FxiOS',
+  'SamsungBrowser',
+];
+
+const isSafari = (): boolean => {
+  const ua = navigator.userAgent ?? '';
+  const vendor = navigator.vendor ?? '';
+
+  if (vendor !== 'Apple Computer, Inc.') return false;
+  if (!ua.includes('Safari/')) return false;
+  if (!ua.includes('Version/')) return false;
+
+  for (const token of FORBIDDEN_UA_TOKENS) {
+    if (ua.includes(token)) return false;
+  }
+  return true;
+};
+
+const isDismissedSafari = localStorage.getItem('dismiss_safari_warning_v1') === '1';
+if (isSafari() && !isDismissedSafari) {
+  document.getElementById('safariWarning').removeAttribute('hidden');
+}
+// END SAFARI DETECTION
+
+// generic announcement/admin announcement messages
+document.querySelectorAll('[data-dismiss-key]').forEach((msg: HTMLElement) => {
+  if (localStorage.getItem(`dismiss_${msg.dataset.dismissKey}`) !== '1') {
+    msg.parentElement.removeAttribute('hidden');
+  }
+});
+
+makeMalleableColumnsGreatAgain();
+
+// selector for all {permission}_select (canread, canwrite, canbook)
+const permissionSelects = document.querySelectorAll<HTMLSelectElement>(
+  '[id$="_select_teamgroups"], [id$="_select_teams"], [id$="_select_users"]',
+);
+
+function initPermissionsTomSelects() {
+  if (permissionSelects.length === 0) return;
+  permissionSelects.forEach((select) => {
+    const tsSelect = select as HTMLSelectElement & { tomselect?: TomSelect };
+    // avoid re-init of tomselect if already exists
+    if (tsSelect.tomselect) return;
+    const config = {
+      plugins: {
+        no_backspace_delete: {},
+        remove_button: {},
+      },
+      // display many things or users will be confused what they search is not displayed right away
+      maxOptions: 2222,
+      onInitialize() { setSelectedItemsDivVisibility(this); },
+      onItemAdd() {
+        this.setTextboxValue('');
+        setSelectedItemsDivVisibility(this);
+      },
+      onItemRemove() { setSelectedItemsDivVisibility(this); },
+    };
+    const wrapper = select.closest('.ts-wrapper');
+    config['dropdownParent'] = wrapper;
+    config['controlInput'] = wrapper?.querySelector('input');
+    // for users, we return a formatted response with id - user (email)
+    if (select.id.endsWith('_select_users')) {
+      config['load'] = (query: string, callback) => {
+        if (!query.length) return callback();
+        fetchUsers(query).then(callback).catch(() => callback());
+      };
+    }
+    new TomSelect(select, config);
+  });
+}
+
+initPermissionsTomSelects();
+
+// make the div holding selected items disappear when empty and vice versa.
+function setSelectedItemsDivVisibility(instance) {
+  instance.control.style.display = instance.items.length ? 'flex' : 'none';
+}
+
+// fetch users and return in an id - username (email) format
+async function fetchUsers(query: string) {
+  const users = await ApiC.getJson(`/users/search?q=${encodeURIComponent(query)}`);
+  return users.map((u) => ({
+    value: `user:${u.userid}`,
+    text: `${u.fullname} (${u.email})`,
+  }));
+}
+
+on('team-scope-change', async (el: HTMLElement) => {
+  const scope = Number(el.dataset.value);
+  const identifier = el.dataset.identifier;
+  if (!identifier) return;
+  // custom scope button for team select
+  const menu = el.parentElement;
+  if (menu) {
+    menu.querySelectorAll('.dropdown-item').forEach((item) => {
+      item.classList.remove('active');
+      item.querySelector('i')?.classList.remove('color-white');
+    });
+  }
+  el.classList.add('active');
+  el.querySelector('i')?.classList.add('color-white');
+
+  const btn = el.closest('.btn-group')?.querySelector('button.dropdown-toggle');
+  if (btn) {
+    // clear existing content
+    btn.replaceChildren();
+    const icon = document.createElement('i');
+    icon.classList.add('fas', 'fa-fw', scope === 1 ? 'fa-user' : 'fa-globe', 'mx-1');
+    const text = document.createTextNode(scope === 1 ? i18next.t('my-teams') : i18next.t('all-teams'));
+    btn.append(text, icon);
+  }
+  let teams;
+
+  if (scope === 1) {
+    const user = await ApiC.getJson(`${Model.User}/me`);
+    teams = user.teams;
+  } else {
+    const allTeams = await ApiC.getJson('teams');
+    teams = allTeams.filter((t) => t.visible !== 0);
+  }
+  const select = document.querySelector(`#${identifier}_select_teams`) as HTMLSelectElement;
+  if (!select) return;
+  rebuildTomSelectOptions(select, {
+    options: teams.map(team => ({
+      value: `team:${team.id}`,
+      text: team.name,
+    })),
+  });
+});
+
+document.addEventListener('scope-changed', () => {
+  permissionSelects.forEach(select => rebuildTomSelectOptions(select));
+});
+
+// tom-select for team selection on login and register page, and idp selection
+['init_team_select', 'team', 'team_selection_select', 'idp_login_select'].forEach(id =>{
+  if (document.getElementById(id)) {
+    new TomSelect(`#${id}`, {
+      plugins: [
+        'dropdown_input',
+        'no_active_items',
+      ],
+      // we also remember the last selected one in localStorage
+      onChange: rememberLastSelected(id),
+      onInitialize: selectLastSelected(id),
+      // users get confused when their team doesn't show up (default is 50)
+      // so make it huge because otherwise one needs to explain that user needs to type to start filtering team names
+      // but users don't know how to type, only click and scroll, so it doesn't come to their mind.
+      maxOptions: 2222,
+    });
+  }
+});
+
+// only on entity page
+const pageMode = new URLSearchParams(document.location.search).get('mode');
+
+notify.flashSuccess();
+
+if (entity.type !== EntityType.Other && (pageMode === 'view' || pageMode === 'edit')) {
+  // MALLEABLE ENTITY TITLE
+  new Malle({
+    after: (original, _, value) => {
+      // special case for title: update the page title on update
+      if (original.id === 'documentTitle') {
+        document.title = value;
+      }
+      return true;
+    },
+    onEdit: (original, _, input) => {
+      if (original.innerText === 'unset') {
+        input.value = '';
+        original.classList.remove('font-italic');
+      }
+      return true;
+    },
+    inputClasses: ['form-control'],
+    fun: (value, original) => {
+      const params = {};
+      params[original.dataset.target] = value;
+      return ApiC.patch(`${original.dataset.endpoint}/${original.dataset.id}`, params)
+        .then(res => res.json())
+        .then(json => json[original.dataset.target]);
+    },
+    listenOn: '.malleable-title',
+    returnedValueIsTrustedHtml: false,
+    tooltip: i18next.t('click-to-edit'),
+  }).listen();
+
+  // CATEGORY AND STATUS
+  const notsetOpts = {id: null, title: i18next.t('not-set'), color: 'bdbdbd', is_current_team: 1};
+  let statusEndpoint = `${Model.Team}/current/items_status`;
+  let categoryEndpoint = `${Model.Team}/current/resources_categories`;
+  if (entity.type === EntityType.Experiment || entity.type === EntityType.Template) {
+    categoryEndpoint = `${Model.Team}/current/experiments_categories`;
+    statusEndpoint = `${Model.Team}/current/experiments_status`;
+  }
+
+  // this is a cache for category or status for malle
+  const optionsCache = [];
+  // this promise will fetch the categories or status on click
+  const getCatStatArr = (endpoint: string): Promise<Status[]> => {
+    if (!optionsCache[endpoint]) {
+      optionsCache[endpoint] = ApiC.getJson(`${endpoint}?limit=9000`)
+        .then(json => {
+          const arr = Array.from(json) as Status[];
+          arr.unshift(notsetOpts);
+          return arr as SelectOptions[];
+        });
+    }
+    return optionsCache[endpoint];
+  };
+
+  // Ensure the select opens with the currently displayed category/status selected
+  // for both category & status malleables
+  const selectCurrentCatStatOption = (original: HTMLElement, _: Event, input: HTMLInputElement | HTMLSelectElement): boolean => {
+    const select = input as HTMLSelectElement;
+    const currentId = original.dataset.id?.trim();
+    if (currentId && Array.from(select.options).some(option => option.value === currentId)) {
+      select.value = currentId;
+      return true;
+    }
+    const currentText = original.textContent?.trim() ?? '';
+    for (let i = 0; i < select.options.length; i++) {
+      const option = select.options.item(i);
+      if ((option?.textContent?.trim() ?? '') === currentText) {
+        option.selected = true;
+        select.value = option.value;
+        break;
+      }
+    }
+    return true;
+  };
+
+  const getCurrentTeamCatStatOptions = async (endpoint: string): Promise<Status[]> =>
+    ((await getCatStatArr(endpoint)) as Status[])
+      .filter((catStat: Status) => catStat.is_current_team === 1);
+
+  // MALLEABLE STATUS
+  new Malle({
+    after: (elem: HTMLElement, _: Event, value: string) => {
+      const icon = document.createElement('i');
+      icon.classList.add('fas', 'fa-circle', 'mr-1');
+      const splitValue = value.split('|');
+      icon.style.color = `#${splitValue[1]}`;
+      elem.insertBefore(icon, elem.firstChild);
+      return true;
+    },
+    onEdit: selectCurrentCatStatOption,
+    inputClasses: ['form-control', 'ml-2'],
+    formClasses: ['form-inline'],
+    fun: (value: string, original: HTMLElement) => updateCatStat(original.dataset.target, entity, value).then(color => {
+      original.style.setProperty('--bg', `#${color}`);
+      return color;
+    }),
+    inputType: InputType.Select,
+    selectOptionsValueKey: 'id',
+    selectOptionsTextKey: 'title',
+    selectOptions: () => getCurrentTeamCatStatOptions(statusEndpoint),
+    listenOn: '.malleableStatus',
+    returnedValueIsTrustedHtml: false,
+    tooltip: i18next.t('click-to-edit'),
+  }).listen();
+
+  // MALLEABLE CATEGORY
+  new Malle({
+    after: (elem: HTMLElement, _: Event, value: string) => {
+      const splitValue = value.split('|');
+      elem.dataset.id = splitValue[0];
+      elem.style.setProperty('--bg', `#${splitValue[1]}`);
+      return true;
+    },
+    onEdit: selectCurrentCatStatOption,
+    inputClasses: ['form-control'],
+    formClasses: ['form-inline'],
+    fun: (value: string, original: HTMLElement) => updateCatStat(original.dataset.target, entity, value),
+    inputType: InputType.Select,
+    selectOptionsValueKey: 'id',
+    selectOptionsTextKey: 'title',
+    selectOptions: () => getCurrentTeamCatStatOptions(categoryEndpoint),
+    listenOn: '.malleableCategory',
+    returnedValueIsTrustedHtml: false,
+    tooltip: i18next.t('click-to-edit'),
+  }).listen();
+}
+
+/**
+ * Add listeners for filter bar on top of a table
+ * The "filter" data attribute value is the id of the tbody element with rows to filter
+ */
+document.querySelectorAll('input[data-filter-target]').forEach((input: HTMLInputElement) => {
+  const target = document.getElementById(input.dataset.filterTarget);
+  const targetType = input.dataset.targetType;
+  // FIRST LISTENER is to filter the rows
+  input.addEventListener('keyup', () => {
+    target.querySelectorAll(`#${input.dataset.filterTarget} ${targetType}`).forEach((row: HTMLTableRowElement|HTMLUListElement) => {
+      // show or hide the row if it matches the query
+      if (row.innerText.toLowerCase().includes(input.value.toLowerCase())) {
+        row.removeAttribute('hidden');
+      } else {
+        row.hidden = true;
+      }
+    });
+  });
+  // SECOND LISTENER on the clear input button
+  input.nextElementSibling.addEventListener('click', () => {
+    input.value = '';
+    input.focus();
+    target.querySelectorAll(`#${input.dataset.filterTarget} ${targetType}`).forEach((row: HTMLTableRowElement) => {
+      row.removeAttribute('hidden');
+    });
+  });
+});
+
+function getAncestorDetails(el: Element): HTMLDetailsElement[] {
+  const detailsEls: HTMLDetailsElement[] = [];
+  let parent = el.parentElement;
+  while (parent) {
+    if (parent.tagName.toLowerCase() === 'details') {
+      detailsEls.push(parent as HTMLDetailsElement);
+    }
+    parent = parent.parentElement;
+  }
+  return detailsEls;
+}
+
+/**
+* Add an event listener on wheel event to prevent scrolling down with a number input selected.
+* Without this, the number will change to the next integer and information entered is lost.
+* Use the "passive" option to avoid impact on performance.
+*/
+document.addEventListener('wheel', () => {
+  const activeElement = document.activeElement;
+  if (activeElement instanceof HTMLInputElement && activeElement.type === 'number') {
+    activeElement.blur();
+  }
+}, { passive: true });
+
+/**
+ * make 'toggle next' elements accessible by keyboard
+ * redirect to click event
+ */
+document.getElementById('container').addEventListener('keydown', event => {
+  const el = event.target as HTMLElement;
+  if (el.matches('[data-action="toggle-next"]')
+      && (event.key === ' ' || event.key === 'Enter' || event.key === 'Spacebar')) {
+    el.dispatchEvent(new Event('click', { bubbles: true, cancelable: false }));
+    event.preventDefault();
+  }
+});
+
+on('show-policy', (el: HTMLElement) => {
+  fetch('app/controllers/UnauthRequestHandler.php').then(resp => resp.json()).then(json => {
+    const policy = json[el.dataset.policy];
+    let title: string;
+    // TODO i18n
+    switch (el.dataset.policy) {
+    case 'tos':
+      title = json.tos_name;
+      break;
+    case 'a11y':
+      title = json.a11y_name;
+      break;
+    case 'legal':
+      title = json.legal_name;
+      break;
+    default:
+      title = json.privacy_name;
+    }
+    (document.getElementById('policiesModalLabel') as HTMLHeadElement).innerText = title;
+    (document.getElementById('policiesModalBody') as HTMLDivElement).innerHTML = policy;
+    // modal plugin requires jquery
+    $('#policiesModal').modal('toggle');
+  });
+});
+
+on('reload-on-click', (el: HTMLElement) => reloadElements([el.dataset.target]));
+on('switch-editor', () => getEditor().switch(entity).then(() => window.location.reload()));
+on('destroy-favtags', (el: HTMLElement) => {
+  if (confirm(i18next.t('generic-delete-warning'))) {
+    ApiC.delete(`${Model.FavTag}/${el.dataset.id}`).then(() => reloadElements(['favtagsTagsDiv']));
+  }
+});
+
+on('insert-param-and-reload', async (el: HTMLElement) => {
+  const params = new URLSearchParams(document.location.search.slice(1));
+  const target = el.dataset.target;
+  const value = (el as HTMLInputElement).value;
+  if (!target) return;
+  if (value) {
+    params.set(target, value);
+  } else {
+    params.delete(target);
+  }
+  window.history.replaceState({}, '', `?${params.toString()}`);
+  await handleReloads(el.dataset.reload);
+});
+
+// used on displayMessage divs: we save the fact that it was closed
+on('save-dismiss', (el: HTMLElement) => {
+  if (el.dataset.dismissKey) {
+    localStorage.setItem(`dismiss_${el.dataset.dismissKey}`, '1');
+  }
+});
+
+on('add-query-filter', (el: HTMLElement) => {
+  const params = new URLSearchParams(document.location.search.substring(1));
+  params.set(el.dataset.key, el.dataset.value);
+  // make sure to set the offset to 0, see #4826
+  params.set('offset', '0');
+  window.location.href = `?${params.toString()}`;
+});
+
+on('scroll-top', () => {
+  document.documentElement.scrollTo({
+    top: 0,
+    behavior: 'smooth',
+  });
+});
+
+on('toggle-sidepanel', (el: HTMLElement, event: Event) => {
+  // this action might exist on a link: prevent jump to top
+  event.preventDefault();
+  const SidePanelC = el.dataset.target === Model.FavTag ? FavTagC : TodolistC;
+  if (el.dataset.purpose === 'hide') {
+    return SidePanelC.hide();
+  }
+  SidePanelC.toggle();
+});
+
+on('toggle-pin', (el: HTMLElement) => {
+  let id = entity.id;
+  if (isNaN(id) || id === null) {
+    id = parseInt(el.dataset.id, 10);
+  }
+  ApiC.patch(`${entity.type}/${id}`, {action: Action.Pin}).then(() => {
+    // toggle appearance of button and icon
+    toggleGrayClasses(el.classList);
+    el.querySelector('i').classList.toggle('color-weak');
+  });
+});
+
+/*
+ * Enable/disable dependent container based on its toggle
+ * example usage:
+ * <input type='checkbox' data-action='toggle-dependent' data-target-toggle='divToDisable' />
+ * <div id='divToDisable'><input type='text' value='abcd'></div>
+ */
+on('toggle-dependent', (el: HTMLInputElement) => {
+  const targetId = el.dataset.targetToggle;
+  if (!targetId) return;
+  const container = document.getElementById(targetId);
+  if (!container) return;
+  const disabled = !el.checked;
+  container.style.opacity = disabled ? '0.5' : '';
+  container
+    .querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>('input, select, textarea')
+    .forEach(input => {
+      input.disabled = disabled;
+    });
+});
+
+on('save-booking-settings', async (_, e:Event): Promise<void | Response> => {
+  e.preventDefault();
+  const form = document.getElementById('editBookingParamsForm') as HTMLFormElement;
+  const params = collectForm(form);
+  await ApiC.patch(`items/${form.dataset.itemId}`, params);
+  reloadElements(['topToolbar', 'permissionsDiv']);
+  $('#bookingParamsModal').modal('hide');
+});
+
+on('transfer-ownership', async (_, e:Event) => {
+  e.preventDefault();
+  const params = collectForm(document.getElementById('ownershipTransferForm'));
+  if (!params['targetUserId'] || !params['targetTeamId']) {
+    return;
+  }
+  const userid = Number.parseInt(String(params['targetUserId']).split(' ')[0], 10);
+  const team = Number.parseInt(String(params['targetTeamId']), 10);
+  await ApiC.patch(`${entity.type}/${entity.id}`, { notifOnSaved: 0, action: Action.UpdateOwner, userid, team });
+  sessionStorage.setItem('flash_ownershipTransfer', i18next.t('ownership-transfer'));
+  const path = window.location.pathname.toLowerCase();
+  if (path.includes('experiment')) {
+    window.location.href = 'experiments.php';
+  } else if (path.includes('database') || path.includes('resource')) {
+    window.location.href = 'database.php';
+  } else {
+    window.location.href = 'dashboard.php';
+  }
+});
+
+on(Action.Restore, () => {
+  ApiC.patch(`${entity.type}/${entity.id}`, { action: Action.Restore })
+    .then(() => window.location.href = `?mode=view&id=${entity.id}`);
+});
+
+on('reload-page', () => location.reload());
+on('remove-parent', (el: HTMLElement) => el.parentElement.remove());
+
+on('clear-form', (el: HTMLElement) => {
+  const target = document.getElementById(el.dataset.target);
+  const inputs = target.querySelectorAll('input');
+  inputs.forEach(input => input.value = '');
+});
+
+on('save-permissions', (el: HTMLElement) => {
+  const params = {};
+  params[el.dataset.rw] = collectPermissionsFromModal(el.dataset.identifier);
+  const baseSelect = getSafeElementById(`${el.dataset.identifier}_select_base`) as HTMLSelectElement;
+  params[baseSelect.name] = baseSelect.value;
+  // if we're editing the default read/write permissions for experiments, this data attribute will be set
+  if (el.dataset.isUserDefault) {
+    // we need to replace canread/canwrite with default_read/default_write for user attribute
+    let paramKey = 'default_read';
+    if (el.dataset.rw === 'canwrite') {
+      paramKey = 'default_write';
+    }
+    // create a new key and delete the old one
+    params[paramKey] = params[el.dataset.rw];
+    delete params[el.dataset.rw];
+    ApiC.patch(`${Model.User}/me`, params).then(() => reloadElements([el.dataset.identifier + 'Div']));
+  } else {
+    ApiC.patch(`${entity.type}/${entity.id}`, params).then(() => reloadElements([el.dataset.identifier + 'Div']));
+  }
+});
+
+function collectPermissionsFromModal(identifier: string): string {
+  const teams = ($('#' + identifier + '_select_teams').val() as string[] | null) ?? [];
+  const teamgroups = ($('#' + identifier + '_select_teamgroups').val() as string[] | null) ?? [];
+  const users = ($('#' + identifier + '_select_users').val() as string[] | null) ?? [];
+  return permissionsToJson(
+    teams.concat(teamgroups).concat(users),
+  );
+}
+
+// change both read & write permissions in one go
+on('save-permissions-both', (el: HTMLElement) => {
+  if (!confirm(i18next.t('entity-apply-both-permissions-warning'))) {
+    return;
+  }
+  const permissions = collectPermissionsFromModal(el.dataset.identifier);
+  const baseSelect = getSafeElementById(`${el.dataset.identifier}_select_base`) as HTMLSelectElement;
+  const params = {canread: permissions, canread_base: baseSelect.value, canwrite: permissions, canwrite_base: baseSelect.value};
+  ApiC.patch(`${entity.type}/${entity.id}`, params)
+    .then(() => reloadElements(['canreadDiv', 'canwriteDiv']));
+});
+
+on('select-lang', () => {
+  const select = (document.getElementById('langSelect') as HTMLSelectElement);
+  fetch(`app/controllers/UnauthRequestHandler.php?lang=${select.value}`).then(() => window.location.reload());
+});
+
+/* TOGGLE NEXT ACTION
+ * An element with "toggle-next" as data-action value will appear clickable.
+ * Clicking on it will toggle the "hidden" attribute of the next sibling element by default.
+ */
+on('toggle-next', (el: HTMLElement) => {
+  let targetEl = el.nextElementSibling as HTMLElement;
+  if (el.dataset.toggleTarget) {
+    targetEl = document.getElementById(el.dataset.toggleTarget);
+  }
+  const isHidden = targetEl.toggleAttribute('hidden');
+  el.setAttribute('aria-expanded', String(!isHidden));
+
+  // might want to toggle another element with toggle-extra
+  if (el.dataset.toggleTargetExtra) {
+    document.getElementById(el.dataset.toggleTargetExtra).toggleAttribute('hidden');
+  }
+
+  // save the hidden state of the target element in localStorage
+  if (targetEl.dataset.saveHidden) {
+    localStorage.setItem(`${targetEl.dataset.saveHidden}-isHidden`, isHidden ? '1' : '0');
+  }
+
+  // now deal with icon of executor element
+  toggleIcon(el, isHidden);
+});
+
+// START STORAGE
+on('toggle-all-storage', (el: HTMLElement) => {
+  // expand or collapse all storage nodes
+  const root = document.getElementById('storageDiv');
+  const state = el.dataset.expand === '1';
+  if (root) {
+    const detailsElements = root.querySelectorAll('details');
+    detailsElements.forEach((details: HTMLDetailsElement) => {
+      details.open = state;
+    });
+  }
+});
+
+on('rename-storage', (el: HTMLElement) => {
+  const name = prompt('Name')?.trim();
+  if (!name) return;
+  ApiC.patch(`storage_units/${el.dataset.id}`, {name: name}).then(() => {
+    reloadElements(['storageDiv']).then(() => {
+      const parent: HTMLDetailsElement = document.querySelector(`details[data-id="${el.dataset.id}"]`);
+      if (parent) {
+        parent.open = true;
+        // now open ancestors too
+        getAncestorDetails(parent).forEach(details => details.open = true);
+      }
+    });
+  });
+});
+on('add-storage-children', (el: HTMLElement) => {
+  const unitName = prompt(i18next.t('location-name'));
+  if (!unitName || !unitName.trim()) {
+    return;
+  }
+  const params = {
+    parent_id: el.dataset.parentId,
+    name: unitName.trim(),
+  };
+  ApiC.post('storage_units', params).then(() => {
+    reloadElements(['storageDiv']).then(() => {
+      const parent: HTMLDetailsElement = document.querySelector(`details[data-id="${params.parent_id}"]`);
+      if (parent) {
+        parent.open = true;
+        // now open ancestors too
+        getAncestorDetails(parent).forEach(details => details.open = true);
+      }
+    });
+  });
+});
+// CONTAINER DISTRIBUTION across multiple storage locations
+// Each storage location in the "Add container" modal has a -/number/+ stepper.
+// The user distributes a target number of containers (#containerMultiplierInput) across
+// the locations; the steppers can never sum above the target, and the "Store containers"
+// button is only enabled once they sum exactly to it.
+
+/**
+ * Read a non-negative integer from a number input. Blank, negative or non-integer
+ * values (e.g. a manually typed 1.9) collapse to 0 so a fractional entry can never
+ * feed the distribution math or submit a different count than what is shown.
+ */
+const intFromInput = (el: HTMLInputElement | null): number => {
+  const value = el?.valueAsNumber ?? NaN;
+  return Number.isInteger(value) && value >= 0 ? value : 0;
+};
+
+/** All the per-location quantity inputs currently rendered in the modal. */
+const containerStepperInputs = (): HTMLInputElement[] =>
+  Array.from(document.querySelectorAll('input[data-action="container-qty-input"]'));
+
+/** The target total number of containers to distribute. */
+const containerTarget = (): number =>
+  intFromInput(document.getElementById('containerMultiplierInput') as HTMLInputElement | null);
+
+/** The number of containers currently assigned across all locations. */
+const containerAssigned = (): number =>
+  containerStepperInputs().reduce((sum, input) => sum + intFromInput(input), 0);
+
+/** Update the assigned/target counter and enable submit only at an exact match. */
+function refreshContainerDistribution(): void {
+  const target = containerTarget();
+  const assigned = containerAssigned();
+  const assignedEl = document.getElementById('containerAssignedCount');
+  const targetEl = document.getElementById('containerTargetCount');
+  if (assignedEl) assignedEl.textContent = String(assigned);
+  if (targetEl) targetEl.textContent = String(target);
+  const submitBtn = document.getElementById('storeContainersBtn') as HTMLButtonElement | null;
+  if (submitBtn) submitBtn.disabled = target === 0 || assigned !== target;
+}
+
+/**
+ * Sum of every stepper except the one passed in (identity match, robust whether or
+ * not the input's own value has already been updated by the browser).
+ */
+const otherSteppersTotal = (except: HTMLInputElement): number =>
+  containerStepperInputs()
+    .filter(input => input !== except)
+    .reduce((sum, input) => sum + intFromInput(input), 0);
+
+/** Set a stepper to a value, clamped so the total assigned can never exceed the target. */
+function setStepperValue(input: HTMLInputElement, value: number): void {
+  const max = Math.max(0, containerTarget() - otherSteppersTotal(input));
+  input.value = String(Math.min(Math.max(0, value), max));
+  refreshContainerDistribution();
+}
+
+/** Clamp every stepper down when the target total is reduced below what is already assigned. */
+function reclampAllSteppers(): void {
+  const target = containerTarget();
+  let running = 0;
+  containerStepperInputs().forEach(input => {
+    let value = intFromInput(input);
+    if (running + value > target) {
+      value = Math.max(0, target - running);
+    }
+    input.value = String(value);
+    running += value;
+  });
+  refreshContainerDistribution();
+}
+
+/** Resolve the quantity input that belongs to a clicked +/- button. */
+const stepperFor = (el: HTMLElement): HTMLInputElement | null =>
+  document.querySelector(`input[data-action="container-qty-input"][data-storage-id="${el.dataset.storageId}"]`);
+
+on('container-qty-plus', (el: HTMLElement) => {
+  const input = stepperFor(el);
+  if (input) setStepperValue(input, intFromInput(input) + 1);
+});
+on('container-qty-minus', (el: HTMLElement) => {
+  const input = stepperFor(el);
+  if (input) setStepperValue(input, intFromInput(input) - 1);
+});
+
+on('store-containers-distributed', () => {
+  const submitBtn = document.getElementById('storeContainersBtn') as HTMLButtonElement | null;
+  // guard against double submit: a disabled button means a batch is already in flight
+  if (submitBtn?.disabled) {
+    return;
+  }
+  const qty_stored = (document.getElementById('containerQtyStoredInput') as HTMLInputElement).value;
+  const qty_unit = (document.getElementById('containerQtyUnitSelect') as HTMLSelectElement).value;
+  const postCalls = containerStepperInputs().flatMap(input => {
+    const count = intFromInput(input);
+    return Array.from({ length: count }, () =>
+      ApiC.post(`${entity.type}/${entity.id}/containers/${input.dataset.storageId}`, {
+        qty_stored: qty_stored,
+        qty_unit: qty_unit,
+      }),
+    );
+  });
+  if (postCalls.length === 0) {
+    return;
+  }
+  // lock the button while the batch runs so a second click cannot create a duplicate distribution
+  if (submitBtn) submitBtn.disabled = true;
+  // Execute all POST calls and reload elements after all are resolved
+  Promise.all(postCalls)
+    .then(() => {
+      reloadElements(['storageDivContent']);
+      $('#storageModal').modal('hide');
+    })
+    .catch((error) => notify.error(error))
+    .finally(() => {
+      if (submitBtn) submitBtn.disabled = false;
+    });
+});
+
+// the steppers' number inputs and the target total fire 'input', not 'click', so they are
+// handled with a delegated listener rather than via on()
+const storageModalEl = document.getElementById('storageModal');
+if (storageModalEl) {
+  document.getElementById('container')?.addEventListener('input', (event: Event) => {
+    const target = event.target as HTMLElement | null;
+    const stepper = target?.closest('input[data-action="container-qty-input"]') as HTMLInputElement | null;
+    if (stepper) {
+      setStepperValue(stepper, intFromInput(stepper));
+      return;
+    }
+    if (target?.id === 'containerMultiplierInput') {
+      reclampAllSteppers();
+    }
+  });
+  // reset all steppers each time the modal opens so a reopened modal starts clean
+  $('#storageModal').on('show.bs.modal', () => {
+    containerStepperInputs().forEach(input => { input.value = '0'; });
+    refreshContainerDistribution();
+  });
+}
+
+on('delete-storage-root', (el: HTMLElement) => ApiC.delete(`storage_units/${el.dataset.id}`).then(() => reloadElements(['storageDiv'])));
+
+on('destroy-container', (el: HTMLElement) => {
+  if (confirm(i18next.t('generic-delete-warning'))) {
+    ApiC.delete(`${entity.type}/${entity.id}/containers/${el.dataset.id}`).then(() => reloadElements(['storageDivContent']));
+  }
+});
+
+on('move-container', (el: HTMLElement) => {
+  const modal = document.getElementById('moveStorageModal');
+  if (!modal) return;
+  modal.dataset.containerId = el.dataset.id;
+  $('#moveStorageModal').modal('show');
+});
+
+on('move-storage', (el: HTMLElement) => {
+  const modal = document.getElementById('moveStorageUnitModal');
+  if (!modal) return;
+  const storageId = el.dataset.id;
+  modal.dataset.storageId = storageId;
+  // disable self + descendants as valid targets
+  modal.querySelectorAll('button[data-action="move-storage-target"]').forEach((btn: HTMLButtonElement) => {
+    btn.disabled = false;
+  });
+  const selfDetails = modal.querySelector(`details[data-id="${storageId}"]`) as HTMLDetailsElement | null;
+  const selfRoot = modal.querySelector(`.box[data-root-id="${storageId}"]`);
+  const scope = selfDetails ?? selfRoot;
+  if (scope) {
+    scope.querySelectorAll('button[data-action="move-storage-target"]').forEach((btn: HTMLButtonElement) => {
+      btn.disabled = true;
+    });
+    // also disable the root-level "Move here" if this unit is itself a root
+    if (selfRoot) {
+      const rootBtn = selfRoot.querySelector(':scope > div > div > button[data-action="move-storage-target"]') as HTMLButtonElement | null;
+      if (rootBtn) rootBtn.disabled = true;
+    }
+  }
+  $('#moveStorageUnitModal').modal('show');
+});
+
+on('move-storage-target', (el: HTMLElement) => {
+  const modal = document.getElementById('moveStorageUnitModal');
+  const storageId = modal?.dataset.storageId;
+  const newParentId = el.dataset.id;
+  if (!storageId || !newParentId) return;
+  ApiC.patch(`storage_units/${storageId}`, { parent_id: parseInt(newParentId, 10) })
+    .then(() => reloadElements(['storageDiv']))
+    .catch((error) => notify.error(error));
+});
+
+on('move-storage-to-root', () => {
+  const modal = document.getElementById('moveStorageUnitModal');
+  const storageId = modal?.dataset.storageId;
+  if (!storageId) return;
+  ApiC.patch(`storage_units/${storageId}`, { parent_id: null })
+    .then(() => reloadElements(['storageDiv']))
+    .catch((error) => notify.error(error));
+});
+
+on('move-container-target', (el: HTMLElement) => {
+  const modal = document.getElementById('moveStorageModal');
+  const containerId = modal?.dataset.containerId;
+  const newStorageId = el.dataset.id;
+  if (!containerId || !newStorageId) return;
+  ApiC.patch(`${entity.type}/${entity.id}/containers/${containerId}`, { storage_id: parseInt(newStorageId, 10) })
+    .then(() => reloadElements(['storageDivContent']))
+    .catch((error) => notify.error(error));
+});
+
+on('destroy-storage', (el: HTMLElement) => {
+  if (confirm(i18next.t('generic-delete-warning'))) {
+    ApiC.delete(`storage_units/${el.dataset.id}`).then(() => reloadElements(['storageDiv']));
+  }
+});
+
+on('replace-with-next', (el: HTMLElement) => {
+  const targetEl = el.nextElementSibling as HTMLElement;
+  // show the target
+  targetEl.toggleAttribute('hidden');
+  // hide clicked element
+  el.toggleAttribute('hidden');
+});
+on('toggle-modal', (el: HTMLElement) => {
+  // TODO this requires jquery for now. Not in BS5.
+  $('#' + el.dataset.target).modal('show');
+});
+
+on('update-entity-body', (el: HTMLElement) => {
+  updateEntityBody().then(() => {
+    // SAVE AND GO BACK BUTTON
+    if (el.matches('[data-redirect="view"]')) {
+      window.location.replace('?mode=view&id=' + entity.id);
+    }
+  });
+});
+
+on('search-pubchem', (el: HTMLElement) => {
+  const inputEl = el.parentElement.parentElement.querySelector('input') as HTMLInputElement;
+  if (!inputEl.checkValidity()) {
+    inputEl.reportValidity();
+    return;
+  }
+  const elOldHTML = mkSpin(el);
+  const resultTableDiv = document.getElementById('pubChemSearchResultTableDiv');
+  // we will handle errors differently here
+  ApiC.getJson(`compounds?search_pubchem_${el.dataset.from}=${inputEl.value}`, { notifOnError: 0 }).then(json => {
+    const compounds = Array.isArray(json) ? json : [json];
+    const table = document.createElement('table');
+    table.classList.add('table');
+
+    // a good cas to try this code: 56392-17-7 (has 10 cids)
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    ['CID', 'CAS', i18next.t('name'), i18next.t('import')].forEach(text => {
+      const th = document.createElement('th');
+      th.textContent = text;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    table.appendChild(tbody);
+    compounds.forEach(compound => {
+      const row = document.createElement('tr');
+      // CID column
+      const cidCell = document.createElement('td');
+      const cidLink = document.createElement('a');
+      cidLink.href = `https://pubchem.ncbi.nlm.nih.gov/compound/${compound.cid}`;
+      cidLink.classList.add('external-link');
+      cidLink.target = '_blank';
+      cidLink.rel = 'noopener';
+      cidLink.textContent = compound.cid;
+      cidCell.appendChild(cidLink);
+      row.appendChild(cidCell);
+
+      // CAS column
+      const casCell = document.createElement('td');
+      casCell.textContent = compound.cas;
+      row.appendChild(casCell);
+
+      // Name column
+      const nameCell = document.createElement('td');
+      nameCell.textContent = compound.name;
+      row.appendChild(nameCell);
+
+      // Import column
+      const importCell = document.createElement('td');
+      const importBtn = document.createElement('button');
+      importBtn.classList.add('btn', 'btn-primary');
+      importBtn.innerText = i18next.t('import');
+      importBtn.dataset.cid = String(compound.cid);
+      importBtn.dataset.action = 'import-compound';
+      importCell.appendChild(importBtn);
+      row.appendChild(importCell);
+
+      tbody.appendChild(row);
+    });
+    // clear any previous result
+    resultTableDiv.innerHTML = '';
+    resultTableDiv.appendChild(table);
+  }).catch(err => {
+    console.error(err);
+    resultTableDiv.innerText = err;
+  }).finally(() => {
+    mkSpinStop(el, elOldHTML);
+  });
+});
+
+on('search-entity-from-compound', (el: HTMLElement) => {
+  // try and grab the CAS for the search
+  let query = (document.getElementById('compoundInput-cas_number') as HTMLInputElement).value;
+  // if no cas, use the name
+  if (!query) {
+    query = (document.getElementById('compoundInput-name') as HTMLInputElement).value;
+  }
+  window.location.href = `${el.dataset.page}.php?q="${encodeURIComponent(query)}"`;
+});
+
+on('import-compound', (el: HTMLElement) => {
+  const elOldHTML = mkSpin(el);
+  const params = {cid: parseInt(el.dataset.cid, 10), action: Action.Duplicate};
+  ApiC.post2location('compounds', params).then(() => {
+    document.dispatchEvent(new CustomEvent('dataReload'));
+  }).catch(err => {
+    console.error(err);
+  }).finally(() => {
+    mkSpinStop(el, elOldHTML);
+    el.setAttribute('disabled', 'disabled');
+  });
+});
+
+on('create-resource-from-compound', (el: HTMLElement) => {
+  const compoundId = (document.getElementById('compoundInput-id') as HTMLInputElement).value;
+  // create either from template or category
+  let payload = {};
+  if (el.dataset.tplid) {
+    payload = { template: el.dataset.tplid };
+  } else if (el.dataset.catid) {
+    payload = { category: parseInt(el.dataset.catid, 10) };
+  }
+  ApiC.post2location('items', payload).then(id => {
+    // now create a link with that compound
+    ApiC.post(`items/${id}/${LinkSubModel.CompoundsLinks}/${compoundId}`).then(() => {
+      // also change the title
+      const compoundName = (document.getElementById('compoundInput-name') as HTMLInputElement).value;
+      ApiC.patch(`items/${id}`, {title: compoundName}).then(() => {
+        window.location.href = `/database.php?mode=edit&id=${id}`;
+      });
+    });
+  });
+});
+
+on('save-compound', (el: HTMLElement, event: Event) => {
+  event.preventDefault();
+  try {
+    if (el.dataset.compoundId) { // edit
+      const form = document.getElementById('editCompoundForm') as HTMLFormElement;
+      const params = collectForm(form);
+      ApiC.patch(`compounds/${el.dataset.compoundId}`, params).then(() => {
+        document.dispatchEvent(new CustomEvent('dataReload'));
+        $('#editCompoundModal').modal('hide');
+        form.reset();
+      });
+    } else { // create
+      const form = document.getElementById('createCompoundForm') as HTMLFormElement;
+      const params = collectForm(form);
+      ApiC.post2location('compounds', params).then(id => {
+        ApiC.getJson(`compounds/${id}`).then((json) => {
+          setTimeout(() => {
+            toggleEditCompound(json);
+          }, 500);
+          document.dispatchEvent(new CustomEvent('dataReload'));
+          $('#createCompoundModal').modal('hide');
+          form.reset();
+        });
+      });
+    }
+  } catch (err) {
+    notify.error(err);
+    return;
+  }
+});
+on('delete-compound', () => {
+  const btn = document.getElementById('deleteCompoundsBtn');
+  const idList = btn.dataset.target.split(',');
+  if (!confirm(`Delete ${idList.length} compound(s)?`)) {
+    return;
+  }
+  idList.forEach(id => ApiC.delete(`compounds/${id}`));
+  document.dispatchEvent(new CustomEvent('dataReload'));
+});
+on('restore-compounds', () => {
+  const btn = document.getElementById('restoreCompoundsBtn');
+  const idList = btn.dataset.target.split(',');
+  idList.forEach(id => ApiC.patch(`compounds/${id}`, {state: 1}));
+  document.dispatchEvent(new CustomEvent('dataReload'));
+});
+
+// PASSWORD VISIBILITY TOGGLE
+on('toggle-password', (el: HTMLElement) => {
+  // toggle eye icon
+  const icon = el.firstChild as HTMLElement;
+  icon.classList.toggle('fa-eye');
+  icon.classList.toggle('fa-eye-slash');
+
+  // toggle input type
+  const input = el.parentElement.parentElement.querySelector('input');
+
+  let attribute = 'password';
+  if (input.getAttribute('type') === 'password') {
+    attribute = 'text';
+  }
+  input.type = attribute;
+});
+
+on('logout', () => {
+  localStorage.setItem('logout_msg', '1');
+  window.location.href = 'app/logout.php';
+});
+
+const logoutMessageDiv = document.getElementById('logoutMessage');
+if (logoutMessageDiv  && localStorage.getItem('logout_msg')) {
+  logoutMessageDiv.removeAttribute('hidden');
+  clearLocalStorage();
+}
+
+on('ack-notif', (el: HTMLElement) => {
+  if (el.parentElement.dataset.ack === '0') {
+    ApiC.patch(`${Model.User}/me/${Model.Notification}/${el.dataset.id}`).then(() => {
+      if (el.dataset.href) {
+        window.location.href = el.dataset.href;
+      } else {
+        reloadElements(['navbarNotifDiv']);
+      }
+    });
+  } else {
+    if (el.dataset.href) {
+      window.location.href = el.dataset.href;
+    }
+  }
+});
+
+on('destroy-notif', () => ApiC.delete(`${Model.User}/me/${Model.Notification}`).then(() => reloadElements(['navbarNotifDiv'])));
+
+// CREATE EXPERIMENT, TEMPLATE or DATABASE item: main create button in top right
+on('create-entity', async (el: HTMLElement, event: Event) => {
+  event.preventDefault();
+  const form = document.getElementById('createNewForm') as HTMLFormElement;
+  const params = collectForm(form);
+  if (el.dataset.tplid) {
+    params['template'] = parseInt(el.dataset.tplid, 10);
+  }
+  // look for any tag present in the url, we will create the entry with these tags
+  const urlParams = new URLSearchParams(document.location.search);
+  const tags = urlParams.getAll('tags[]');
+  if (tags) {
+    params['tags'] = tags;
+  }
+  let page = 'experiments.php';
+  if (el.dataset.type === 'experiments_templates') {
+    page = 'templates.php';
+  }
+  if (el.dataset.type === 'items_types') {
+    page = 'resources-templates.php';
+  }
+  if (el.dataset.type === 'database' || el.dataset.type === 'items') {
+    el.dataset.type = 'items';
+    page = 'database.php';
+  }
+  const id = await ApiC.post2location(`${el.dataset.type}`, params);
+  if (params['compound']) {
+    await ApiC.post(`${el.dataset.type}/${id}/compounds_links/${params['compound']}`, {});
+  }
+  window.location.href = `${page}?mode=edit&id=${id}`;
+});
+
+on('report-bug', (el: HTMLElement, event: Event) => {
+  event.preventDefault();
+  el.querySelector('i').classList.add('moving-bug');
+  setTimeout(() => window.location.assign('https://github.com/elabftw/elabftw/issues/new/choose'), 3000);
+});
+
+// TOGGLE ANONYMOUS READ ACCESS
+on('toggle-anonymous-access', () => {
+  ApiC.patch(`${entity.type}/${entity.id}`, {action: Action.AccessKey}).then(response => response.json()).then(json => {
+    document.getElementById('anonymousAccessUrlDiv').toggleAttribute('hidden');
+    (document.getElementById('anonymousAccessUrlInput') as HTMLInputElement).value = json.sharelink;
+  });
+});
+
+on('reload-color', (el: HTMLElement) => {
+  (el.nextElementSibling as HTMLInputElement).value = getRandomColor();
+});
+
+// CREATE CATEGORY OR STATUS
+on('create-catstat', (el: HTMLElement) => {
+  const modalId = 'createCatStatModal';
+  const form = document.getElementById(modalId);
+  try {
+    const params = collectForm(form);
+    ApiC.post(`${Model.Team}/current/${el.dataset.endpoint}`, params).then(() => {
+      $(`#${modalId}`).modal('toggle');
+      reloadElements(['catStatDiv']);
+      clearForm(form);
+      // assign a new random color after clearing the form
+      const colorInput = (form.querySelector('input[type="color"]') as HTMLInputElement);
+      colorInput.value = getRandomColor();
+    });
+  } catch (e) {
+    console.error(e);
+  }
+});
+// DESTROY CATEGORY/STATUS
+on('destroy-catstat', (el: HTMLElement) => {
+  if (confirm(i18next.t('generic-delete-warning'))) {
+    ApiC.delete(`${Model.Team}/current/${el.dataset.endpoint}/${el.dataset.id}`)
+      .then(() => el.parentElement.parentElement.parentElement.remove());
+  }
+});
+on('copy-to-clipboard', (el: HTMLElement) => {
+  navigator.clipboard.writeText((document.getElementById(el.dataset.target) as HTMLInputElement).value);
+  // indicate that the data was copied by changing the icon into text and back into the icon
+  const previousHTML = el.innerHTML;
+  window.setTimeout(function() {
+    el.innerHTML = previousHTML;
+  }, 1337);
+  el.innerText = i18next.t('copied');
+});
+
+// REMOVE COMPOUND LINK
+on('delete-compound-link', (el: HTMLElement) => ApiC.delete(`${entity.type}/${entity.id}/${LinkSubModel.CompoundsLinks}/${el.dataset.id}`)
+  .then(() => reloadElements(['compoundDiv'])));
+
+// CLICK the NOW button of a time or date extra field
+on('update-to-now', (el: HTMLElement) => {
+  const input = el.closest('.input-group').querySelector('input');
+  // use Luxon lib here
+  const now = DateTime.local();
+  // date format
+  let format = 'yyyy-MM-dd';
+  if (input.type === 'time') {
+    format = 'HH:mm';
+  }
+  if (input.type === 'datetime-local') {
+    /* eslint-disable-next-line quotes */
+    format = "yyyy-MM-dd'T'HH:mm";
+  }
+  input.value = now.toFormat(format);
+  // trigger change event so it is saved
+  input.dispatchEvent(new Event('change'));
+});
+
+// TOGGLE BODY
+on('toggle-body', (el: HTMLElement) => {
+  const randId = el.dataset.randid;
+  const bodyDiv = document.getElementById(randId);
+  let action = 'hide';
+  // transform the + in - and vice versa
+  if (bodyDiv.hasAttribute('hidden')) {
+    action = 'show';
+  }
+  toggleIcon(el, !bodyDiv.hasAttribute('hidden'));
+  // don't reload body if it is already loaded for show action
+  // and the hide action is just toggle hidden attribute and do nothing else
+  if ((action === 'show' && bodyDiv.dataset.bodyLoaded) || action === 'hide') {
+    bodyDiv.toggleAttribute('hidden');
+    return;
+  }
+
+  const contentDiv = bodyDiv.querySelector('div');
+
+  // prepare the get request
+  const entityId = parseInt(el.dataset.id, 10);
+  let queryUrl = `${el.dataset.type}/${entityId}`;
+  // special case for revisions
+  if (el.dataset.revid) {
+    queryUrl += `/revisions/${el.dataset.revid}`;
+  }
+  ApiC.getJson(queryUrl).then(json => {
+    // skip extra fields on the revisions page (focus remains on body). See #6053
+    if (window.location.pathname !== '/revisions.php') {
+      // add extra fields elements from metadata json
+      const entity = {type: el.dataset.type as EntityType, id: entityId};
+      const MetadataC = new Metadata(entity, new JsonEditorHelper(entity));
+      MetadataC.metadataDiv = contentDiv;
+      MetadataC.display('view').then(() => {
+        // go over all the type: url elements and create a link dynamically
+        generateMetadataLink();
+      });
+    }
+    // add html content
+    contentDiv.innerHTML = json.body_html;
+
+    // adjust the width of the children
+    // get the width of the parent. The -30 is to make it smaller than parent even with the margins
+    const width = document.getElementById('parent_' + randId).clientWidth - 30;
+    bodyDiv.style.width = String(width);
+
+    // ask mathjax to reparse the page
+    MathJax.typeset();
+
+    TableSortingC.init();
+
+    bodyDiv.toggleAttribute('hidden');
+    bodyDiv.dataset.bodyLoaded = '1';
+  });
+});
+
+on('autocomplete', (el: HTMLElement) => {
+  // depending on the type of results, we will want different attributes and formatting
+  let transformer = entity => {
+    const cat = entity.category_title ? `${entity.category_title} - ` : '';
+    const stat = entity.status_title ? `${entity.status_title} - ` : '';
+    return `${entity.id} - ${cat}${stat}${entity.title}`;
+  };
+  // useid data attribute is used in admin panel to grab the userid from input
+  if (el.dataset.target === 'users') {
+    transformer = user => `${user.userid} - ${user.fullname} (${user.email})`;
+  }
+  if (el.dataset.target === 'compounds') {
+    transformer = compound => `${compound.id} - ${compound.name} ${compound.cas_number ? ` (CAS: ${compound.cas_number})` : ''}`;
+  }
+
+  // use autocomplete jquery-ui plugin
+  $(el).autocomplete({
+    // this option is necessary or the autocomplete box will get lost under the permissions modal
+    appendTo: el.dataset.identifier ? `#autocompleteAnchorDiv_${el.dataset.identifier}` : '',
+    source: function(request: Record<string, string>, response: (data: Array<string>) => void): void {
+      const term = (request.term || '').trim();
+      // for East/Southeast Asian terms, we allow search with 1 grapheme
+      const isShortScript = hasEastSEAsian(term);
+      const minChars = isShortScript ? 1 : 3;
+      if (countGraphemes(term) < minChars) {
+        const msg = isShortScript ? [] : [i18next.t('type-3-chars')];
+        response(msg);
+        return;
+        // TODO make it unselectable/grayed out or something, maybe once we use homegrown autocomplete
+      }
+      const queryTerm = ['experiments', 'items'].includes(el.dataset.target)
+        ? escapeExtendedQuery(term)
+        : term;
+
+      const params = new URLSearchParams();
+      params.set('q', queryTerm);
+
+      // allow filtering users within a specific team
+      if (el.dataset.team) {
+        const teamId = document.getElementById(el.dataset.team) as HTMLInputElement | HTMLSelectElement;
+        if (teamId?.value) {
+          params.set('team', teamId.value);
+        }
+      }
+      ApiC.getJson(`${el.dataset.target}/?${params.toString()}`).then(json => {
+        if (!Array.isArray(json) || json.length === 0) {
+          response([i18next.t('not-found')]);
+          return;
+        }
+        response(json.map(entry => transformer(entry)));
+      });
+    },
+  });
+});
+
+on('query', (el: HTMLElement) => {
+  const url = new URL(window.location.href);
+  // query format: order-sort
+  const query = el.dataset.target.split('-');
+  url.searchParams.set('order', query[0]);
+  url.searchParams.set('sort', query[1]);
+  window.location.href = url.href;
+});
+
+on(Action.EmailBookers, (el: HTMLElement, event: Event) => {
+  event.preventDefault();
+  const form = document.getElementById('notifySurroundingBookersForm') as HTMLFormElement;
+  const params = collectForm(form);
+  params['action'] = Action.EmailBookers;
+  params['entity_id'] = entity.id;
+  const button = (el as HTMLButtonElement);
+  const buttonText = button.innerText;
+  button.disabled = true;
+  button.innerText = i18next.t('please-wait');
+  ApiC.post('instance', params).then(() => {
+    form.reset();
+    $('#sendBookingsEmailModal').modal('hide');
+    button.innerText = buttonText;
+  }).catch(() => {
+    button.innerText = i18next.t('error');
+    // TODO don't hardcode colors
+    button.style.backgroundColor = '#e6614c';
+  }).finally(() => button.disabled = false);
+});
+
+on('delete-compounds', (el: HTMLElement) => {
+  const idList = el.dataset.target.split(',');
+  if (!confirm(i18next.t('multi-changes-confirm', { num: idList.length }))) {
+    return;
+  }
+  idList.forEach(id => ApiC.delete(`compounds/${id}`));
+  document.dispatchEvent(new CustomEvent('dataReload'));
+});
+
+on('scope-change', async (el: HTMLElement) => {
+  // only set it in query if we want to, which prevents an issue on dashboard where value was taken from query param "scope"
+  if (el.dataset.setQueryParam === '1') {
+    const params = new URLSearchParams(document.location.search);
+    params.set('scope', el.dataset.value);
+    history.pushState(null, '', `?${params.toString()}`);
+  }
+  const userParams = {};
+  userParams[el.dataset.target] = el.dataset.value;
+  await ApiC.patch('users/me', userParams);
+  await handleReloads(el.dataset.reload);
+  document.dispatchEvent(new Event('scope-changed'));
+});
+
+/**
+ * MAIN click listener on container
+ */
+const container = document.getElementById('container')!;
+container.addEventListener('click', (event: Event) => {
+  const rawTarget = event.target as HTMLElement | null;
+  const el = rawTarget?.closest('[data-action]') as HTMLElement | null;
+  if (!el || !container.contains(el)) return;
+  const set = get(el.dataset.action);
+  if (!set) return;
+  // do not use for..of here!
+  set.forEach(fn => {
+    try {
+      fn(el, event);
+    } catch (err) {
+      console.error('Handler error for action:', el.dataset.action, err);
+      notify.error(err);
+    }
+  });
+});

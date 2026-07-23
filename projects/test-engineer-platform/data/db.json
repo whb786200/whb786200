@@ -1,0 +1,30 @@
+{
+  "users": [
+    {
+      "id": "e0ba065a-8efb-48e2-b427-845dee44070e",
+      "username": "admin",
+      "passwordHash": "$2b$10$dB8pLB1/IYkiAiyZXGiifOj7.3KjAB4ZYT1AfiFhVqGlkV2YDHjJG",
+      "name": "系统管理员",
+      "company": "试验工程师平台",
+      "licenseNo": "",
+      "phone": "",
+      "role": "admin",
+      "points": 100,
+      "inviteCode": "ADMIN001",
+      "referredBy": null,
+      "createdAt": "2026-06-18T10:00:17.795Z",
+      "updatedAt": "2026-06-18T10:00:17.795Z"
+    }
+  ],
+  "pointTransactions": [
+    {
+      "id": "e1f5c64c-2c7d-4190-ac2e-5d558800b09a",
+      "userId": "e0ba065a-8efb-48e2-b427-845dee44070e",
+      "amount": 100,
+      "type": "seed",
+      "resourceId": null,
+      "note": "初始化管理员积分",
+      "createdAt": "2026-06-18T10:00:17.795Z"
+    }
+  ]
+}
